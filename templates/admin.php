@@ -62,6 +62,10 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 					<?php if ($manifest['owner'] !== ''): ?>
 						<span class="smartcommands-manifest__owner"><?php p($l->t('owner: %s', [$manifest['owner']])); ?></span>
 					<?php endif; ?>
+					<button type="button" class="smartcommands-manifest__delete"
+						data-owner="<?php p($manifest['owner']); ?>" data-id="<?php p($manifest['id']); ?>">
+						<?php p($l->t('Delete')); ?>
+					</button>
 				</h4>
 				<?php if ($manifest['commands'] === []): ?>
 					<p class="settings-hint"><?php p($l->t('No commands.')); ?></p>

@@ -241,6 +241,20 @@ class TargetRegistry {
 	}
 
 	/**
+	 * Deletes a published manifest by owner account and bot id (admin
+	 * housekeeping for stale or decommissioned bots). Returns false when no
+	 * such manifest exists. Mirrors ManifestController::manifestKey().
+	 */
+	public function deleteManifest(string $owner, string $botId): bool {
+		$key = 'bot:' . rawurlencode($owner) . ':' . rawurlencode($botId);
+		if ($this->config->getAppValue(Application::APP_ID, $key, '') === '') {
+			return false;
+		}
+		$this->config->deleteAppValue(Application::APP_ID, $key);
+		return true;
+	}
+
+	/**
 	 * Instance-wide default target (admin setting). Empty when unset; there is
 	 * deliberately no hard-coded fallback, so an unconfigured generic alias
 	 * relies on room-aware resolution (the single bot in the room) instead.
