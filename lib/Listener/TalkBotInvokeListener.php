@@ -79,6 +79,12 @@ class TalkBotInvokeListener implements IEventListener {
 			$this->targetRegistry->configuredDefault($userId),
 		);
 		if ($bot === null) {
+			if ($ambiguous) {
+				// Several bots present, none is the configured default: nudge the
+				// user toward an explicit /<name> command. Posted through the
+				// app's own Talk bot via the invoking event.
+				$this->answerAmbiguous($event, $roomToken, (int)($body['object']['id'] ?? 0));
+			}
 			$this->logger->debug('Smart Picker Commands event bot bridge resolved no webhook bot', [
 				'app' => Application::APP_ID,
 				'target' => $target,
@@ -89,6 +95,29 @@ class TalkBotInvokeListener implements IEventListener {
 		}
 
 		$this->sendWebhook($bot['name'], $bot['url'], $bot['secret'], json_encode($body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
+	}
+
+	/**
+	 * Posts a "use a specific command" hint listing the explicit /<name>
+	 * commands for the webhook bots currently in the room.
+	 */
+	private function answerAmbiguous(BotInvokeEvent $event, string $roomToken, int $replyTo): void {
+		$names = [];
+		foreach ($this->roomBotLookup->webhookBotsForRoom($roomToken) as $bot) {
+			$first = strtok(strtolower(trim($bot['name'])), " \t\r\n");
+			if ($first !== false && $first !== '') {
+				$names[] = '/' . $first;
+			}
+		}
+		$names = array_values(array_unique($names));
+		if ($names === []) {
+			return;
+		}
+
+		$event->addAnswer(
+			'Several bots are in this conversation. Send a specific command, e.g. ' . implode(', ', $names) . '.',
+			$replyTo,
+		);
 	}
 
 	private function sendWebhook(string $botName, string $botUrl, string $botSecret, string $body): void {
