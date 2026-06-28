@@ -46,4 +46,37 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 		<?php endforeach; ?>
 	</table>
 	<span id="smartcommands-admin-status" aria-live="polite"></span>
+
+	<h3><?php p($l->t('Registered commands')); ?></h3>
+	<p class="settings-hint">
+		<?php p($l->t('Commands each bot has published to the Smart Picker. Published by each bot\'s own account, so this view is read-only.')); ?>
+	</p>
+	<?php if ($_['manifests'] === []): ?>
+		<p class="settings-hint"><?php p($l->t('No bot has published commands yet.')); ?></p>
+	<?php else: ?>
+		<?php foreach ($_['manifests'] as $manifest): ?>
+			<div class="smartcommands-manifest">
+				<h4 class="smartcommands-manifest__head">
+					<?php p($manifest['name']); ?>
+					<code class="smartcommands-manifest__id">/<?php p($manifest['id']); ?></code>
+					<?php if ($manifest['owner'] !== ''): ?>
+						<span class="smartcommands-manifest__owner"><?php p($l->t('owner: %s', [$manifest['owner']])); ?></span>
+					<?php endif; ?>
+				</h4>
+				<?php if ($manifest['commands'] === []): ?>
+					<p class="settings-hint"><?php p($l->t('No commands.')); ?></p>
+				<?php else: ?>
+					<table class="grid">
+						<?php foreach ($manifest['commands'] as $command): ?>
+							<tr>
+								<td><code><?php p($command['insert']); ?></code></td>
+								<td><?php p($command['label']); ?></td>
+								<td class="smartcommands-manifest__desc"><?php p($command['description']); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</table>
+				<?php endif; ?>
+			</div>
+		<?php endforeach; ?>
+	<?php endif; ?>
 </div>

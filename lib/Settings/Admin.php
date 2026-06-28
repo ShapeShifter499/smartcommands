@@ -31,6 +31,7 @@ class Admin implements ISettings {
 			'serverDefault' => $this->config->getAppValue(Application::APP_ID, 'default_bot_target', ''),
 			'groups' => $groupIds,
 			'groupDefaults' => $this->targetRegistry->groupDefaults(),
+			'manifests' => $this->targetRegistry->allManifests(),
 		]);
 	}
 

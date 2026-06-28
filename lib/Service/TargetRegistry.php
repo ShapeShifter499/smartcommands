@@ -185,6 +185,62 @@ class TargetRegistry {
 	}
 
 	/**
+	 * All registered manifests with their commands, for read-only display in
+	 * the admin settings. Sorted by bot id.
+	 *
+	 * @return list<array{owner: string, id: string, name: string, commands: list<array{id: string, label: string, description: string, insert: string}>}>
+	 */
+	public function allManifests(): array {
+		$manifests = [];
+		foreach ($this->config->getAppKeys(Application::APP_ID) as $key) {
+			if (!str_starts_with($key, 'bot:')) {
+				continue;
+			}
+			$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
+			if ($raw === '') {
+				continue;
+			}
+
+			try {
+				$manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
+			} catch (\JsonException) {
+				continue;
+			}
+			if (!is_array($manifest)) {
+				continue;
+			}
+
+			$id = strtolower(trim((string)($manifest['id'] ?? '')));
+			if ($id === '') {
+				continue;
+			}
+
+			$commands = [];
+			foreach (is_array($manifest['commands'] ?? null) ? $manifest['commands'] : [] as $command) {
+				if (!is_array($command)) {
+					continue;
+				}
+				$commands[] = [
+					'id' => (string)($command['id'] ?? ''),
+					'label' => (string)($command['label'] ?? ''),
+					'description' => (string)($command['description'] ?? ''),
+					'insert' => (string)($command['insert'] ?? ''),
+				];
+			}
+
+			$manifests[] = [
+				'owner' => (string)($manifest['owner'] ?? ''),
+				'id' => $id,
+				'name' => (string)($manifest['name'] ?? $id),
+				'commands' => $commands,
+			];
+		}
+
+		usort($manifests, static fn (array $a, array $b): int => strcmp($a['id'], $b['id']));
+		return $manifests;
+	}
+
+	/**
 	 * Instance-wide default target (admin setting). Empty when unset; there is
 	 * deliberately no hard-coded fallback, so an unconfigured generic alias
 	 * relies on room-aware resolution (the single bot in the room) instead.
