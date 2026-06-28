@@ -24,14 +24,14 @@ class Personal implements ISettings {
 		$current = $user === null ? '' : $this->config->getUserValue(
 			$user->getUID(),
 			Application::APP_ID,
-			'default_agent_target',
+			'default_bot_target',
 			'',
 		);
 
 		return new TemplateResponse(Application::APP_ID, 'personal', [
-			'agents' => $this->targetRegistry->registeredAgentIds(),
+			'bots' => $this->targetRegistry->registeredBotIds(),
 			'current' => $current,
-			'serverDefault' => $this->targetRegistry->resolveAlias('agent'),
+			'serverDefault' => $this->targetRegistry->resolveAlias('bot'),
 		]);
 	}
 

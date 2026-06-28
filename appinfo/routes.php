@@ -10,23 +10,23 @@ return [
 			'verb' => 'GET',
 		],
 		[
-			'name' => 'manifest#upsertAgent',
-			'url' => '/api/agents/{agentId}',
+			'name' => 'manifest#upsertBot',
+			'url' => '/api/bots/{botId}',
 			'verb' => 'PUT',
 		],
 		[
-			'name' => 'manifest#deleteAgent',
-			'url' => '/api/agents/{agentId}',
+			'name' => 'manifest#deleteBot',
+			'url' => '/api/bots/{botId}',
 			'verb' => 'DELETE',
 		],
 		[
-			'name' => 'personalSettings#setDefaultAgent',
-			'url' => '/api/personal/default-agent',
+			'name' => 'personalSettings#setDefaultBot',
+			'url' => '/api/personal/default-bot',
 			'verb' => 'PUT',
 		],
 		[
-			'name' => 'adminSettings#setDefaultAgent',
-			'url' => '/api/admin/default-agent',
+			'name' => 'adminSettings#setDefaultBot',
+			'url' => '/api/admin/default-bot',
 			'verb' => 'PUT',
 		],
 		[

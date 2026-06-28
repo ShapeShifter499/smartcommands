@@ -132,7 +132,7 @@ class TalkSlashCommandBridgeListener implements IEventListener {
 	/**
 	 * Matches the message against the targets currently known from registered
 	 * manifests. Returns the lowercase target token, or null when the message
-	 * is not an agent command.
+	 * is not a bot command.
 	 */
 	private function matchTarget(string $rawMessage): ?string {
 		if ($rawMessage === '' || $rawMessage[0] !== '/') {

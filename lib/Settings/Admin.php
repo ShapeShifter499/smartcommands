@@ -27,8 +27,8 @@ class Admin implements ISettings {
 		sort($groupIds);
 
 		return new TemplateResponse(Application::APP_ID, 'admin', [
-			'agents' => $this->targetRegistry->registeredAgentIds(),
-			'serverDefault' => $this->config->getAppValue(Application::APP_ID, 'default_agent_target', ''),
+			'bots' => $this->targetRegistry->registeredBotIds(),
+			'serverDefault' => $this->config->getAppValue(Application::APP_ID, 'default_bot_target', ''),
 			'groups' => $groupIds,
 			'groupDefaults' => $this->targetRegistry->groupDefaults(),
 		]);
