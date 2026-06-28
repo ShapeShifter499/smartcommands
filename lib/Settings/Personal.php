@@ -21,17 +21,22 @@ class Personal implements ISettings {
 
 	public function getForm(): TemplateResponse {
 		$user = $this->userSession->getUser();
-		$current = $user === null ? '' : $this->config->getUserValue(
-			$user->getUID(),
+		$userId = $user === null ? '' : $user->getUID();
+		$current = $userId === '' ? '' : $this->config->getUserValue(
+			$userId,
 			Application::APP_ID,
 			'default_bot_target',
 			'',
 		);
+		$ownManifest = $userId === '' ? ['name' => '', 'commands' => []] : $this->targetRegistry->ownManifest($userId);
 
 		return new TemplateResponse(Application::APP_ID, 'personal', [
 			'bots' => $this->targetRegistry->registeredBotIds(),
 			'current' => $current,
 			'serverDefault' => $this->targetRegistry->resolveAlias('bot'),
+			'userId' => $userId,
+			'ownName' => $ownManifest['name'],
+			'ownCommands' => $ownManifest['commands'],
 		]);
 	}
 

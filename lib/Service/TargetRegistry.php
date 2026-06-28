@@ -259,6 +259,48 @@ class TargetRegistry {
 	}
 
 	/**
+	 * The calling user's own manifest (botId == userId), for the personal
+	 * editor: its display name and command list. Empty when none is published.
+	 *
+	 * @return array{name: string, commands: list<array{id: string, label: string, description: string, insert: string}>}
+	 */
+	public function ownManifest(string $userId): array {
+		$empty = ['name' => $userId, 'commands' => []];
+		$key = 'bot:' . rawurlencode($userId) . ':' . rawurlencode($userId);
+		$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
+		if ($raw === '') {
+			return $empty;
+		}
+
+		try {
+			$manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
+		} catch (\JsonException) {
+			return $empty;
+		}
+		if (!is_array($manifest)) {
+			return $empty;
+		}
+
+		$commands = [];
+		foreach (is_array($manifest['commands'] ?? null) ? $manifest['commands'] : [] as $command) {
+			if (!is_array($command)) {
+				continue;
+			}
+			$commands[] = [
+				'id' => (string)($command['id'] ?? ''),
+				'label' => (string)($command['label'] ?? ''),
+				'description' => (string)($command['description'] ?? ''),
+				'insert' => (string)($command['insert'] ?? ''),
+			];
+		}
+
+		return [
+			'name' => (string)($manifest['name'] ?? $userId),
+			'commands' => $commands,
+		];
+	}
+
+	/**
 	 * Instance-wide default target (admin setting). Empty when unset; there is
 	 * deliberately no hard-coded fallback, so an unconfigured generic alias
 	 * relies on room-aware resolution (the single bot in the room) instead.
