@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 const DEFAULT_WEBHOOK_URL = "http://127.0.0.1:8788/nextcloud-talk-webhook";
-const DEFAULT_STATE_DIR = path.join(os.homedir(), ".local/state/agentcommands/nextcloud-talk-poller");
+const DEFAULT_STATE_DIR = path.join(os.homedir(), ".local/state/smartcommands/nextcloud-talk-poller");
 const DEFAULT_COMMAND_PREFIXES = ["/agent", "/nymble", "/aurel"];
 
 function envList(name) {

@@ -6,9 +6,9 @@ import {
   registerCustomPickerElement,
 } from '@nextcloud/vue/functions/registerReference'
 
-const PROVIDER_ID = 'agentcommands'
+const PROVIDER_ID = 'smartcommands'
 
-class AgentCommandsPicker extends HTMLElement {
+class SmartCommandsPicker extends HTMLElement {
   connectedCallback() {
     this.renderLoading()
     this.loadCommands()
@@ -17,7 +17,7 @@ class AgentCommandsPicker extends HTMLElement {
   async loadCommands() {
     try {
       const room = currentTalkRoomToken()
-      const url = generateUrl('/apps/agentcommands/api/commands')
+      const url = generateUrl('/apps/smartcommands/api/commands')
       const response = await axios.get(url, { params: room ? { room } : {} })
       this.renderCommands(response.data.agents ?? [], response.data.filteredByRoom ?? null)
     } catch (error) {
@@ -26,31 +26,31 @@ class AgentCommandsPicker extends HTMLElement {
   }
 
   renderLoading() {
-    this.innerHTML = `<div class="agentcommands-picker">${escapeHtml(t('agentcommands', 'Loading commands...'))}</div>`
+    this.innerHTML = `<div class="smartcommands-picker">${escapeHtml(t('smartcommands', 'Loading commands...'))}</div>`
   }
 
   renderError() {
-    this.innerHTML = `<div class="agentcommands-picker agentcommands-picker--error">${escapeHtml(t('agentcommands', 'Commands could not be loaded.'))}</div>`
+    this.innerHTML = `<div class="smartcommands-picker smartcommands-picker--error">${escapeHtml(t('smartcommands', 'Commands could not be loaded.'))}</div>`
   }
 
   renderCommands(agents, filteredByRoom) {
     if (agents.length === 0) {
       const message = filteredByRoom
-        ? t('agentcommands', 'No agent bots are enabled in this conversation.')
-        : t('agentcommands', 'No agent commands configured.')
-      this.innerHTML = `<div class="agentcommands-picker">${escapeHtml(message)}</div>`
+        ? t('smartcommands', 'No agent bots are enabled in this conversation.')
+        : t('smartcommands', 'No agent commands configured.')
+      this.innerHTML = `<div class="smartcommands-picker">${escapeHtml(message)}</div>`
       return
     }
 
     const body = agents.flatMap((agent) => {
       const commands = agent.commands ?? []
       return [
-        `<div class="agentcommands-picker__agent">${escapeHtml(agent.name ?? agent.id)}</div>`,
+        `<div class="smartcommands-picker__agent">${escapeHtml(agent.name ?? agent.id)}</div>`,
         ...commands.map((command) => this.renderCommand(command)),
       ]
     }).join('')
 
-    this.innerHTML = `<div class="agentcommands-picker">${body}</div>`
+    this.innerHTML = `<div class="smartcommands-picker">${body}</div>`
 
     this.querySelectorAll('[data-agent-command]').forEach((button) => {
       button.addEventListener('click', () => {
@@ -62,9 +62,9 @@ class AgentCommandsPicker extends HTMLElement {
   renderCommand(command) {
     const insert = command.insert ?? ''
     return `
-      <button type="button" class="agentcommands-picker__command" data-agent-command="${escapeAttribute(insert)}">
-        <span class="agentcommands-picker__label">${escapeHtml(command.label ?? command.id ?? insert)}</span>
-        <span class="agentcommands-picker__description">${escapeHtml(command.description ?? insert)}</span>
+      <button type="button" class="smartcommands-picker__command" data-agent-command="${escapeAttribute(insert)}">
+        <span class="smartcommands-picker__label">${escapeHtml(command.label ?? command.id ?? insert)}</span>
+        <span class="smartcommands-picker__description">${escapeHtml(command.description ?? insert)}</span>
       </button>
     `
   }
@@ -78,9 +78,9 @@ class AgentCommandsPicker extends HTMLElement {
   }
 }
 
-customElements.define('agentcommands-picker', AgentCommandsPicker)
+customElements.define('smartcommands-picker', SmartCommandsPicker)
 registerCustomPickerElement(PROVIDER_ID, (el) => {
-  const picker = document.createElement('agentcommands-picker')
+  const picker = document.createElement('smartcommands-picker')
   el.appendChild(picker)
   return new NcCustomPickerRenderResult(picker)
 }, (el) => {

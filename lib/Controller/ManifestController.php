@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\AgentCommands\Controller;
+namespace OCA\SmartCommands\Controller;
 
-use OCA\AgentCommands\AppInfo\Application;
-use OCA\AgentCommands\Service\RoomBotLookup;
+use OCA\SmartCommands\AppInfo\Application;
+use OCA\SmartCommands\Service\RoomBotLookup;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;

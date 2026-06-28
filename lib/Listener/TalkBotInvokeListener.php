@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\AgentCommands\Listener;
+namespace OCA\SmartCommands\Listener;
 
-use OCA\AgentCommands\AppInfo\Application;
-use OCA\AgentCommands\Service\RoomBotLookup;
-use OCA\AgentCommands\Service\TargetRegistry;
+use OCA\SmartCommands\AppInfo\Application;
+use OCA\SmartCommands\Service\RoomBotLookup;
+use OCA\SmartCommands\Service\TargetRegistry;
 use OCA\Talk\Events\BotInvokeEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -77,7 +77,7 @@ class TalkBotInvokeListener implements IEventListener {
 		);
 		$bot = $this->roomBotLookup->findBotForTarget($roomToken, $resolvedTarget);
 		if ($bot === null) {
-			$this->logger->debug('Agent Commands event bot bridge found no matching webhook bot', [
+			$this->logger->debug('Smart Picker Commands event bot bridge found no matching webhook bot', [
 				'app' => Application::APP_ID,
 				'target' => $target,
 				'resolvedTarget' => $resolvedTarget,
@@ -112,12 +112,12 @@ class TalkBotInvokeListener implements IEventListener {
 		]);
 
 		$promise->then(function () use ($botName): void {
-			$this->logger->debug('Agent Commands event bot bridge invoked Talk bot webhook', [
+			$this->logger->debug('Smart Picker Commands event bot bridge invoked Talk bot webhook', [
 				'app' => Application::APP_ID,
 				'botName' => $botName,
 			]);
 		}, function (\Throwable $error) use ($botName): void {
-			$this->logger->warning('Agent Commands event bot bridge failed to invoke Talk bot ' . $botName, [
+			$this->logger->warning('Smart Picker Commands event bot bridge failed to invoke Talk bot ' . $botName, [
 				'app' => Application::APP_ID,
 				'botName' => $botName,
 				'exceptionClass' => $error::class,

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\AgentCommands\Reference;
+namespace OCA\SmartCommands\Reference;
 
-use OCA\AgentCommands\AppInfo\Application;
-use OCA\AgentCommands\Service\TargetRegistry;
+use OCA\SmartCommands\AppInfo\Application;
+use OCA\SmartCommands\Service\TargetRegistry;
 use OCP\Collaboration\Reference\ADiscoverableReferenceProvider;
 use OCP\Collaboration\Reference\IReference;
 use OCP\Collaboration\Reference\Reference;
 use OCP\IURLGenerator;
 use OCP\IL10N;
 
-class AgentCommandsProvider extends ADiscoverableReferenceProvider {
+class SmartCommandsProvider extends ADiscoverableReferenceProvider {
 	public function __construct(
 		private IURLGenerator $urlGenerator,
 		private IL10N $l10n,
@@ -21,7 +21,7 @@ class AgentCommandsProvider extends ADiscoverableReferenceProvider {
 	}
 
 	public function getId(): string {
-		return 'agentcommands';
+		return 'smartcommands';
 	}
 
 	public function getTitle(): string {
@@ -68,7 +68,7 @@ class AgentCommandsProvider extends ADiscoverableReferenceProvider {
 	}
 
 	public function getCachePrefix(string $referenceId): string {
-		return 'agentcommands';
+		return 'smartcommands';
 	}
 
 	public function getCacheKey(string $referenceId): ?string {

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Agent Commands.
+Thanks for helping improve Smart Picker Commands.
 
 ## AI-Assisted Contributions
 

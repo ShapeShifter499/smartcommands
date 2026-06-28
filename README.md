@@ -1,6 +1,6 @@
-# Agent Commands
+# Smart Picker Commands
 
-Agent Commands is a Nextcloud Smart Picker app for AI-agent bot commands.
+Smart Picker Commands is a Nextcloud Smart Picker app for AI-agent bot commands.
 
 The goal is to give Talk users a native `/` picker entry named **Agent commands**. The picker can list commands from OpenClaw first, and later from any agent service that publishes a simple manifest.
 
@@ -8,13 +8,13 @@ The goal is to give Talk users a native `/` picker entry named **Agent commands*
 
 This is an early scaffold:
 
-- registers a discoverable reference provider: `agentcommands`
+- registers a discoverable reference provider: `smartcommands`
 - loads a custom Smart Picker element
-- exposes a local command manifest endpoint at `/apps/agentcommands/api/commands`
+- exposes a local command manifest endpoint at `/apps/smartcommands/api/commands`
 - lets authenticated Nextcloud user accounts publish command manifests
 - inserts Talk-ready command text from explicitly registered agent manifests
 - experimentally bridges Talk messages like `/nymble status` to the matching configured Talk bot webhook
-- can also follow Nextcloud's in-process bot pattern with a `nextcloudapp://agentcommands` event bot, similar to `nextcloud/command_bot`
+- can also follow Nextcloud's in-process bot pattern with a `nextcloudapp://smartcommands` event bot, similar to `nextcloud/command_bot`
 
 The app does not ship opinionated default commands. The Smart Picker menu stays empty until an authenticated Nextcloud user account for an agent publishes a manifest. This keeps local command surfaces owned by the agents that actually support them.
 The slash bridge handles the Talk behavior where slash-style messages can be stored as normal messages without waking configured bot webhooks: when Talk stores `/<agent> ...` (or the generic `/agent ...`), the app signs and forwards a standard Talk bot webhook payload to the matching bot configured in that conversation.
@@ -22,33 +22,33 @@ The slash bridge handles the Talk behavior where slash-style messages can be sto
 Valid slash targets are derived from the registered agent manifests — publishing a manifest for a new agent (e.g. `ember`) makes `/ember ...` routable with no app code change. The generic `/agent` alias resolves to the app value `default_agent_target` (default: `nymble`):
 
 ```bash
-php occ config:app:set agentcommands default_agent_target --value nymble
+php occ config:app:set smartcommands default_agent_target --value nymble
 ```
 
 The Smart Picker command list is room-aware: when opened inside a Talk conversation, only agents whose webhook bot is enabled in that conversation are listed. Outside a conversation context the full registry is shown.
 
-Agent Commands expects each agent to be set up with both a dedicated Nextcloud user account and a matching Talk bot account/record:
+Smart Picker Commands expects each agent to be set up with both a dedicated Nextcloud user account and a matching Talk bot account/record:
 
 - the Nextcloud user account, usually named after the agent, owns the Smart Picker command manifest through username/app-password authentication
 - the Talk bot account/record in the relevant room receives signed webhook calls and posts replies
 
-For example, a `nymble` Nextcloud user publishes `/apps/agentcommands/api/agents/nymble`, while the `Nymble` Talk bot receives `/nymble ...` bridge webhooks in rooms where that bot is configured.
+For example, a `nymble` Nextcloud user publishes `/apps/smartcommands/api/agents/nymble`, while the `Nymble` Talk bot receives `/nymble ...` bridge webhooks in rooms where that bot is configured.
 
 ### Experimental Talk event bot bridge
 
-Nextcloud's `command_bot` app uses a local Talk event bot instead of the deprecated `talk_commands` table. To try the same path, install Agent Commands as a Talk event bot, set it up in the room, and keep the existing webhook bot such as `Nymble` configured in that same room:
+Nextcloud's `command_bot` app uses a local Talk event bot instead of the deprecated `talk_commands` table. To try the same path, install Smart Picker Commands as a Talk event bot, set it up in the room, and keep the existing webhook bot such as `Nymble` configured in that same room:
 
 ```bash
 SECRET="$(openssl rand -hex 64)"
 php occ talk:bot:install --feature event \
-  "Agent Commands" "$SECRET" "nextcloudapp://agentcommands" \
+  "Smart Picker Commands" "$SECRET" "nextcloudapp://smartcommands" \
   "Bridge /nymble-style Talk messages to configured agent webhook bots"
 
 php occ talk:bot:list --output=json_pretty
 php occ talk:bot:setup <agent-commands-bot-id> <room-token>
 ```
 
-When the event bot receives a `/<registered-agent> ...` or `/agent ...` message, Agent Commands looks for the matching webhook bot in that room and forwards the normal signed Talk bot payload to that bot's webhook URL.
+When the event bot receives a `/<registered-agent> ...` or `/agent ...` message, Smart Picker Commands looks for the matching webhook bot in that room and forwards the normal signed Talk bot payload to that bot's webhook URL.
 
 ### Talk bot administration notes
 
@@ -74,10 +74,10 @@ npm run build
 
 Agents picking up this project should start with [`SKILL.md`](SKILL.md). It summarizes the no-defaults command policy, Talk bot setup, manifest publishing, and live verification steps.
 
-For a local Nextcloud checkout, install the app directory as `apps/agentcommands`, then enable it:
+For a local Nextcloud checkout, install the app directory as `apps/smartcommands`, then enable it:
 
 ```bash
-php occ app:enable agentcommands
+php occ app:enable smartcommands
 ```
 
 When replacing an already-installed checkout after an app version bump, run the upgrade step too:
@@ -88,7 +88,7 @@ php occ upgrade
 
 ## Optional OpenClaw Talk Poller Fallback
 
-The normal path for Agent Commands is still Nextcloud Talk events and signed Talk bot webhooks. The files in [`contrib/openclaw`](contrib/openclaw) are an optional OpenClaw-side fallback for rooms where Talk app/event hooks are delayed, stale, or do not reliably fire for command-looking messages.
+The normal path for Smart Picker Commands is still Nextcloud Talk events and signed Talk bot webhooks. The files in [`contrib/openclaw`](contrib/openclaw) are an optional OpenClaw-side fallback for rooms where Talk app/event hooks are delayed, stale, or do not reliably fire for command-looking messages.
 
 The fallback poller:
 
@@ -106,10 +106,10 @@ Install the example files somewhere outside the app checkout:
 ```bash
 install -Dm755 contrib/openclaw/nextcloud-talk-poller ~/.local/bin/nextcloud-talk-poller
 install -Dm644 contrib/openclaw/openclaw-nextcloud-talk-poller.service ~/.config/systemd/user/openclaw-nextcloud-talk-poller.service
-install -Dm600 contrib/openclaw/nextcloud-talk-poller.env.example ~/.config/agentcommands/nextcloud-talk-poller.env
+install -Dm600 contrib/openclaw/nextcloud-talk-poller.env.example ~/.config/smartcommands/nextcloud-talk-poller.env
 ```
 
-Edit `~/.config/agentcommands/nextcloud-talk-poller.env` and set at least:
+Edit `~/.config/smartcommands/nextcloud-talk-poller.env` and set at least:
 
 ```text
 NEXTCLOUD_BASE_URL=https://cloud.example.com
@@ -128,7 +128,7 @@ nextcloud-talk-poller --once --dry-run
 systemctl --user enable --now openclaw-nextcloud-talk-poller.service
 ```
 
-Use this as a safety net, not as a replacement for the Agent Commands app bridge. If the normal bridge starts answering reliably, the handoff grace and bot-reply check should keep the poller from producing duplicate replies.
+Use this as a safety net, not as a replacement for the Smart Picker Commands app bridge. If the normal bridge starts answering reliably, the handoff grace and bot-reply check should keep the poller from producing duplicate replies.
 
 ## App Store Prep
 
@@ -145,7 +145,7 @@ curl -u 'agent-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -H 'Content-Type: application/json' \
   -X PUT \
-  'https://cloud.example.com/apps/agentcommands/api/agents/agent-user' \
+  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user' \
   --data '{
     "name": "Agent Display Name",
     "commands": [
@@ -165,7 +165,7 @@ The app stores manifests under the publishing Nextcloud user account, so an agen
 curl -u 'agent-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -X DELETE \
-  'https://cloud.example.com/apps/agentcommands/api/agents/agent-user'
+  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user'
 ```
 
 The manifest contract is intentionally small:

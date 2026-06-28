@@ -1,7 +1,7 @@
 // Plain JS (no build step): saves the personal default-agent choice.
 document.addEventListener('DOMContentLoaded', () => {
-	const select = document.getElementById('agentcommands-default-agent')
-	const status = document.getElementById('agentcommands-default-agent-status')
+	const select = document.getElementById('smartcommands-default-agent')
+	const status = document.getElementById('smartcommands-default-agent-status')
 	if (!select) {
 		return
 	}
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	select.addEventListener('change', async () => {
 		status.textContent = '…'
 		try {
-			const response = await fetch(OC.generateUrl('/apps/agentcommands/api/personal/default-agent'), {
+			const response = await fetch(OC.generateUrl('/apps/smartcommands/api/personal/default-agent'), {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
 				},
 				body: JSON.stringify({ agent: select.value }),
 			})
-			status.textContent = response.ok ? t('agentcommands', 'Saved') : t('agentcommands', 'Could not save')
+			status.textContent = response.ok ? t('smartcommands', 'Saved') : t('smartcommands', 'Could not save')
 		} catch (error) {
-			status.textContent = t('agentcommands', 'Could not save')
+			status.textContent = t('smartcommands', 'Could not save')
 		}
 		setTimeout(() => { status.textContent = '' }, 3000)
 	})

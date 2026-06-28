@@ -1,8 +1,9 @@
 import { createAppConfig } from '@nextcloud/vite-config'
 
 export default createAppConfig({
-  agentcommands: 'src/main.js',
+  smartcommands: 'src/main.js',
 }, {
   assetsPrefix: '',
   thirdPartyLicense: false,
+  emptyOutputDirectory: false,
 })
