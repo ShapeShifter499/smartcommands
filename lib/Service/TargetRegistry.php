@@ -210,7 +210,11 @@ class TargetRegistry {
 				continue;
 			}
 
-			$id = strtolower(trim((string)($manifest['id'] ?? '')));
+			// Preserve the original case: this id is half of the storage key
+			// (bot:<owner>:<id>) that admin delete reconstructs, so lowercasing
+			// it would break deletion for mixed-case account ids. Bot matching
+			// elsewhere is already case-insensitive.
+			$id = trim((string)($manifest['id'] ?? ''));
 			if ($id === '') {
 				continue;
 			}
