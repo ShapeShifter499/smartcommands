@@ -80,6 +80,40 @@ class RoomBotLookup {
 		return null;
 	}
 
+	/**
+	 * Room-aware resolution of a slash target to a concrete webhook bot.
+	 *
+	 * Explicit targets route to the matching bot in the room. The generic
+	 * alias resolves to, in order:
+	 *   1. the configured default, when its bot is enabled in the room;
+	 *   2. the single webhook bot in the room, when exactly one is present;
+	 *   3. otherwise none -- "ambiguous" when several bots are present, so the
+	 *      caller can nudge the user toward an explicit /<name> command.
+	 *
+	 * @return array{0: null|array{name: string, url: string, secret: string}, 1: bool}
+	 *         [resolved bot or null, ambiguous]
+	 */
+	public function resolveRoomBot(string $roomToken, string $target, bool $isGeneric, string $configuredDefault): array {
+		if (!$isGeneric) {
+			return [$this->findBotForTarget($roomToken, $target), false];
+		}
+
+		$configuredDefault = strtolower(trim($configuredDefault));
+		if ($configuredDefault !== '') {
+			$bot = $this->findBotForTarget($roomToken, $configuredDefault);
+			if ($bot !== null) {
+				return [$bot, false];
+			}
+		}
+
+		$bots = $this->webhookBotsForRoom($roomToken);
+		if (count($bots) === 1) {
+			return [$bots[0], false];
+		}
+
+		return [null, count($bots) > 1];
+	}
+
 	public function botMatchesTarget(string $botName, string $resolvedTarget): bool {
 		$normalized = strtolower(trim($botName));
 		$firstWord = strtok($normalized, " \t\r\n") ?: '';

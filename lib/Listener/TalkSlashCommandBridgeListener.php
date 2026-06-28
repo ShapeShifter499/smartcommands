@@ -170,19 +170,24 @@ class TalkSlashCommandBridgeListener implements IEventListener {
 			return;
 		}
 
-		$resolvedTarget = $this->targetRegistry->resolveAlias(
+		$userId = $actorType === 'users' ? $actorId : null;
+		[$bot, $ambiguous] = $this->roomBotLookup->resolveRoomBot(
+			$roomToken,
 			$target,
-			$actorType === 'users' ? $actorId : null,
+			$this->targetRegistry->isGenericTarget($target),
+			$this->targetRegistry->configuredDefault($userId),
 		);
-		$bot = $this->roomBotLookup->findBotForTarget($roomToken, $resolvedTarget);
 		if ($bot === null) {
-			$this->logger->debug('Smart Picker Commands slash bridge found no matching Talk bot', [
+			$this->logger->debug('Smart Picker Commands slash bridge resolved no Talk bot', [
 				'app' => Application::APP_ID,
 				'target' => $target,
-				'resolvedTarget' => $resolvedTarget,
 				'roomToken' => $roomToken,
+				'ambiguous' => $ambiguous,
 				'eventSource' => $eventSource,
 			]);
+			// When $ambiguous (several bots present, none is the configured
+			// default), a "use /<name>" hint will be posted here once the
+			// delivery mechanism is decided.
 			return;
 		}
 
