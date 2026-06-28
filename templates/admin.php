@@ -13,6 +13,20 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 		<?php p($l->t('Who handles the generic /bot command. Personal choices win over group defaults, which win over the server default.')); ?>
 	</p>
 
+	<h3><?php p($l->t('Bridges')); ?></h3>
+	<p class="settings-hint">
+		<?php p($l->t('Forward slash-style commands to the matching Talk bot. Disable a bridge if routing is handled elsewhere.')); ?>
+	</p>
+	<label>
+		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="slash" <?php if ($_['slashBridge']) { p('checked'); } ?>>
+		<?php p($l->t('Slash-message bridge')); ?>
+	</label>
+	<br>
+	<label>
+		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="event" <?php if ($_['eventBridge']) { p('checked'); } ?>>
+		<?php p($l->t('Event-bot bridge')); ?>
+	</label>
+
 	<h3><?php p($l->t('Server default')); ?></h3>
 	<select class="smartcommands-admin-bot" id="smartcommands-admin-server-default">
 		<option value="" <?php if ($_['serverDefault'] === '') { p('selected'); } ?>>

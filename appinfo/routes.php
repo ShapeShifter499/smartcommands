@@ -39,5 +39,10 @@ return [
 			'url' => '/api/admin/manifests/{owner}/{botId}',
 			'verb' => 'DELETE',
 		],
+		[
+			'name' => 'adminSettings#setBridge',
+			'url' => '/api/admin/bridge',
+			'verb' => 'PUT',
+		],
 	],
 ];
