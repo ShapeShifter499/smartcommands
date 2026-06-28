@@ -1,15 +1,15 @@
 ---
-name: agentcommands
-description: Use when integrating an AI agent with the Agent Commands Nextcloud app, publishing Smart Picker command manifests, setting up Talk bot webhooks, or verifying Talk slash-bridge behavior.
+name: smartcommands
+description: Use when integrating an AI agent with the Smart Picker Commands Nextcloud app, publishing Smart Picker command manifests, setting up Talk bot webhooks, or verifying Talk slash-bridge behavior.
 ---
 
-# Agent Commands Skill
+# Smart Picker Commands Skill
 
 Use this repo as the Nextcloud-side bridge between Talk, Smart Picker command manifests, and AI-agent webhook bots.
 
 ## Ground Rules
 
-- Agent Commands ships with no default commands. The picker must stay empty until an authenticated Nextcloud user account for an agent publishes a manifest.
+- Smart Picker Commands ships with no default commands. The picker must stay empty until an authenticated Nextcloud user account for an agent publishes a manifest.
 - Each agent setup is expected to have both a dedicated Nextcloud user account and a matching Talk bot account/record. The user account owns the Smart Picker manifest; the Talk bot account/record receives signed webhook calls and posts replies.
 - Each agent's Nextcloud user account can only publish or delete the manifest whose id matches its authenticated Nextcloud user id.
 - Do not store secrets in manifests, docs, commits, logs, or chat. Use Nextcloud app passwords for manifest publishing and Talk bot secrets for webhook signatures.
@@ -54,7 +54,7 @@ curl -u 'agent-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -H 'Content-Type: application/json' \
   -X PUT \
-  'https://cloud.example.com/apps/agentcommands/api/agents/agent-user' \
+  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user' \
   --data '{
     "name": "Agent Display Name",
     "commands": [
@@ -81,7 +81,7 @@ Remove a manifest with:
 curl -u 'agent-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -X DELETE \
-  'https://cloud.example.com/apps/agentcommands/api/agents/agent-user'
+  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user'
 ```
 
 ## Verify
@@ -91,7 +91,7 @@ Check the manifest endpoint:
 ```bash
 curl -u 'agent-user:app-password' \
   -H 'OCS-APIRequest: true' \
-  'https://cloud.example.com/apps/agentcommands/api/commands'
+  'https://cloud.example.com/apps/smartcommands/api/commands'
 ```
 
 Then test from Talk:
@@ -99,13 +99,13 @@ Then test from Talk:
 1. Open a room containing the agent's Talk bot.
 2. Open the Smart Picker and select the agent command.
 3. Send the inserted text.
-4. Confirm Nextcloud logs show the Agent Commands slash bridge invoking the webhook with `statusCode: "200"`.
+4. Confirm Nextcloud logs show the Smart Picker Commands slash bridge invoking the webhook with `statusCode: "200"`.
 
 Useful log filter:
 
 ```bash
 tail -n 120 /var/www/html/data/nextcloud.log \
-  | grep -i "Agent Commands slash bridge\|invalid signature\|statusCode"
+  | grep -i "Smart Picker Commands slash bridge\|invalid signature\|statusCode"
 ```
 
 ## Optional OpenClaw Poller Fallback
@@ -117,7 +117,7 @@ Install the generic examples outside the repo:
 ```bash
 install -Dm755 contrib/openclaw/nextcloud-talk-poller ~/.local/bin/nextcloud-talk-poller
 install -Dm644 contrib/openclaw/openclaw-nextcloud-talk-poller.service ~/.config/systemd/user/openclaw-nextcloud-talk-poller.service
-install -Dm600 contrib/openclaw/nextcloud-talk-poller.env.example ~/.config/agentcommands/nextcloud-talk-poller.env
+install -Dm600 contrib/openclaw/nextcloud-talk-poller.env.example ~/.config/smartcommands/nextcloud-talk-poller.env
 ```
 
 Configure the private env file with:

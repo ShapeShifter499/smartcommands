@@ -1,12 +1,12 @@
 [Unit]
 Description=OpenClaw Nextcloud Talk command fallback poller
-Documentation=https://github.com/ShapeShifter499/agentcommands
+Documentation=https://github.com/ShapeShifter499/smartcommands
 After=network-online.target openclaw-gateway.service
 Wants=network-online.target openclaw-gateway.service
 
 [Service]
 Type=simple
-EnvironmentFile=%h/.config/agentcommands/nextcloud-talk-poller.env
+EnvironmentFile=%h/.config/smartcommands/nextcloud-talk-poller.env
 ExecStart=%h/.local/bin/nextcloud-talk-poller --watch
 Restart=always
 RestartSec=5

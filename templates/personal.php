@@ -5,14 +5,14 @@ declare(strict_types=1);
 /** @var array $_ */
 /** @var \OCP\IL10N $l */
 
-script(OCA\AgentCommands\AppInfo\Application::APP_ID, 'personal');
+script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 ?>
-<div class="section" id="agentcommands-personal">
+<div class="section" id="smartcommands-personal">
 	<h2><?php p($l->t('Agent commands')); ?></h2>
 	<p class="settings-hint">
 		<?php p($l->t('Which agent should handle the generic /agent command when you use it in Talk.')); ?>
 	</p>
-	<select id="agentcommands-default-agent">
+	<select id="smartcommands-default-agent">
 		<option value="" <?php if ($_['current'] === '') { p('selected'); } ?>>
 			<?php p($l->t('Server default (%s)', [$_['serverDefault']])); ?>
 		</option>
@@ -22,5 +22,5 @@ script(OCA\AgentCommands\AppInfo\Application::APP_ID, 'personal');
 			</option>
 		<?php endforeach; ?>
 	</select>
-	<span id="agentcommands-default-agent-status" aria-live="polite"></span>
+	<span id="smartcommands-default-agent-status" aria-live="polite"></span>
 </div>

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\AgentCommands\Listener;
+namespace OCA\SmartCommands\Listener;
 
-use OCA\AgentCommands\AppInfo\Application;
+use OCA\SmartCommands\AppInfo\Application;
 use OCP\AppFramework\Http\Events\BeforeTemplateRenderedEvent;
 use OCP\Collaboration\Reference\RenderReferenceEvent;
 use OCP\EventDispatcher\Event;
@@ -24,7 +24,7 @@ class ReferenceRenderListener implements IEventListener {
 			return;
 		}
 
-		Util::addScript(Application::APP_ID, 'agentcommands');
-		Util::addStyle(Application::APP_ID, 'agentcommands');
+		Util::addScript(Application::APP_ID, 'smartcommands');
+		Util::addStyle(Application::APP_ID, 'smartcommands');
 	}
 }

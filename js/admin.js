@@ -1,6 +1,6 @@
 // Plain JS (no build step): saves admin server/group defaults for /agent.
 document.addEventListener('DOMContentLoaded', () => {
-	const status = document.getElementById('agentcommands-admin-status')
+	const status = document.getElementById('smartcommands-admin-status')
 
 	async function save(url, body) {
 		status.textContent = '…'
@@ -13,20 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
 				},
 				body: JSON.stringify(body),
 			})
-			status.textContent = response.ok ? t('agentcommands', 'Saved') : t('agentcommands', 'Could not save')
+			status.textContent = response.ok ? t('smartcommands', 'Saved') : t('smartcommands', 'Could not save')
 		} catch (error) {
-			status.textContent = t('agentcommands', 'Could not save')
+			status.textContent = t('smartcommands', 'Could not save')
 		}
 		setTimeout(() => { status.textContent = '' }, 3000)
 	}
 
-	document.getElementById('agentcommands-admin-server-default')?.addEventListener('change', (event) => {
-		save('/apps/agentcommands/api/admin/default-agent', { agent: event.target.value })
+	document.getElementById('smartcommands-admin-server-default')?.addEventListener('change', (event) => {
+		save('/apps/smartcommands/api/admin/default-agent', { agent: event.target.value })
 	})
 
-	document.querySelectorAll('.agentcommands-admin-group').forEach((select) => {
+	document.querySelectorAll('.smartcommands-admin-group').forEach((select) => {
 		select.addEventListener('change', () => {
-			save('/apps/agentcommands/api/admin/group-default', {
+			save('/apps/smartcommands/api/admin/group-default', {
 				group: select.dataset.group,
 				agent: select.value,
 			})

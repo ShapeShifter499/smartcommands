@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\AgentCommands\Service;
+namespace OCA\SmartCommands\Service;
 
-use OCA\AgentCommands\AppInfo\Application;
+use OCA\SmartCommands\AppInfo\Application;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IUserManager;

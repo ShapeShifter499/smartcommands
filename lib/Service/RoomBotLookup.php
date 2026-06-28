@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\AgentCommands\Service;
+namespace OCA\SmartCommands\Service;
 
 use OCP\IDBConnection;
 

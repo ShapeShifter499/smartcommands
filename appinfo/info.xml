@@ -1,28 +1,28 @@
 <?xml version="1.0"?>
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <id>agentcommands</id>
-    <name>Agent Commands</name>
-    <summary>Smart Picker command bridge for AI agents</summary>
+    <id>smartcommands</id>
+    <name>Smart Picker Commands</name>
+    <summary>Smart Picker command lists for bots and agents in Talk</summary>
     <description><![CDATA[
-Agent Commands adds a Smart Picker provider for AI-agent bot commands in Nextcloud Talk and other rich-text surfaces.
+Smart Picker Commands lets bots, agents, and integrations publish their own command lists into the Nextcloud Smart Picker (the "/" menu) in Talk and other rich-text surfaces.
 
-Agents publish their own command manifests so the picker becomes a shared command discovery layer without hard-coded local commands.
+Each publisher owns its command manifest, so the picker becomes a shared, room-aware command-discovery layer with no hard-coded local commands.
     ]]></description>
     <version>0.5.0</version>
     <licence>agpl</licence>
     <author mail="">Lance</author>
-    <namespace>AgentCommands</namespace>
+    <namespace>SmartCommands</namespace>
     <category>integration</category>
-    <bugs>https://github.com/ShapeShifter499/agentcommands/issues</bugs>
-    <website>https://github.com/ShapeShifter499/agentcommands</website>
-    <repository type="git">https://github.com/ShapeShifter499/agentcommands.git</repository>
+    <bugs>https://github.com/ShapeShifter499/smartcommands/issues</bugs>
+    <website>https://github.com/ShapeShifter499/smartcommands</website>
+    <repository type="git">https://github.com/ShapeShifter499/smartcommands.git</repository>
     <dependencies>
         <nextcloud min-version="29" max-version="34"/>
         <php min-version="8.1"/>
     </dependencies>
     <settings>
-        <personal>OCA\AgentCommands\Settings\Personal</personal>
-        <admin>OCA\AgentCommands\Settings\Admin</admin>
+        <personal>OCA\SmartCommands\Settings\Personal</personal>
+        <admin>OCA\SmartCommands\Settings\Admin</admin>
     </settings>
 </info>

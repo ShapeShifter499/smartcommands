@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\AgentCommands\Settings;
+namespace OCA\SmartCommands\Settings;
 
-use OCA\AgentCommands\AppInfo\Application;
-use OCA\AgentCommands\Service\TargetRegistry;
+use OCA\SmartCommands\AppInfo\Application;
+use OCA\SmartCommands\Service\TargetRegistry;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IConfig;
 use OCP\IGroupManager;

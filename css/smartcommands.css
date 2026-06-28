@@ -1,4 +1,4 @@
-.agentcommands-picker {
+.smartcommands-picker {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -7,11 +7,11 @@
   padding: 8px;
 }
 
-.agentcommands-picker--error {
+.smartcommands-picker--error {
   color: var(--color-error);
 }
 
-.agentcommands-picker__agent {
+.smartcommands-picker__agent {
   margin: 4px 4px 2px;
   color: var(--color-text-maxcontrast);
   font-size: 12px;
@@ -19,7 +19,7 @@
   text-transform: uppercase;
 }
 
-.agentcommands-picker__command {
+.smartcommands-picker__command {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -33,16 +33,16 @@
   cursor: pointer;
 }
 
-.agentcommands-picker__command:hover,
-.agentcommands-picker__command:focus {
+.smartcommands-picker__command:hover,
+.smartcommands-picker__command:focus {
   background: var(--color-background-hover);
 }
 
-.agentcommands-picker__label {
+.smartcommands-picker__label {
   font-weight: 600;
 }
 
-.agentcommands-picker__description {
+.smartcommands-picker__description {
   color: var(--color-text-maxcontrast);
   font-size: 12px;
 }
