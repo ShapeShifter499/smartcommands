@@ -16,7 +16,7 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 	<h3><?php p($l->t('Server default')); ?></h3>
 	<select class="smartcommands-admin-bot" id="smartcommands-admin-server-default">
 		<option value="" <?php if ($_['serverDefault'] === '') { p('selected'); } ?>>
-			<?php p($l->t('Built-in fallback (nymble)')); ?>
+			<?php p($l->t('No server default (uses the bot in the room)')); ?>
 		</option>
 		<?php foreach ($_['bots'] as $botId): ?>
 			<option value="<?php p($botId); ?>" <?php if ($_['serverDefault'] === $botId) { p('selected'); } ?>>
