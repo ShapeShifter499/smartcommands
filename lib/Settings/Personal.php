@@ -36,7 +36,7 @@ class Personal implements ISettings {
 	}
 
 	public function getSection(): string {
-		return 'additional';
+		return Application::APP_ID;
 	}
 
 	public function getPriority(): int {

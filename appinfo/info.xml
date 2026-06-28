@@ -22,7 +22,9 @@ Each publisher owns its command manifest, so the picker becomes a shared, room-a
         <php min-version="8.1"/>
     </dependencies>
     <settings>
-        <personal>OCA\SmartCommands\Settings\Personal</personal>
         <admin>OCA\SmartCommands\Settings\Admin</admin>
+        <admin-section>OCA\SmartCommands\Settings\Section</admin-section>
+        <personal>OCA\SmartCommands\Settings\Personal</personal>
+        <personal-section>OCA\SmartCommands\Settings\Section</personal-section>
     </settings>
 </info>
