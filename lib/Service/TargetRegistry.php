@@ -42,35 +42,39 @@ class TargetRegistry {
 	}
 
 	/**
-	 * Builds the message-match regex for the current targets, equivalent in
-	 * shape to the previous hardcoded pattern.
+	 * Builds the message-match regex for the current targets: the generic
+	 * alias plus every registered manifest id. The generic alias is always
+	 * included so room-aware resolution can run even with no manifests.
 	 */
-	public function messagePattern(): ?string {
-		$targets = $this->targets();
-		if (count($targets) === 1 && $this->registeredAgentIds() === []) {
-			// Only the generic alias exists but it has nothing to resolve to;
-			// without manifests there is nothing to bridge.
-			$defaultTarget = $this->defaultAgentTarget();
-			if ($defaultTarget === '') {
-				return null;
-			}
-			$targets[] = $defaultTarget;
-		}
-
-		$quoted = array_map(static fn (string $target): string => preg_quote($target, '/'), $targets);
+	public function messagePattern(): string {
+		$quoted = array_map(static fn (string $target): string => preg_quote($target, '/'), $this->targets());
 		return '/^\/(?P<target>' . implode('|', $quoted) . ')(?:@[^\s]+)?(?:\s+[\s\S]*)?$/i';
 	}
 
+	public function isGenericTarget(string $target): bool {
+		return strtolower($target) === self::GENERIC_TARGET;
+	}
+
 	/**
-	 * Resolves the generic "agent" alias for a sender. Precedence:
-	 * personal setting -> group default -> server default -> built-in.
+	 * Resolves a slash target to a concrete bot id. Explicit targets pass
+	 * through unchanged; the generic alias resolves to the configured default.
+	 * May return '' for the generic alias when no default is configured --
+	 * room-aware resolution (see RoomBotLookup::resolveRoomBot) then takes over.
 	 */
 	public function resolveAlias(string $target, ?string $userId = null): string {
-		$target = strtolower($target);
-		if ($target !== self::GENERIC_TARGET) {
-			return $target;
+		if (!$this->isGenericTarget($target)) {
+			return strtolower($target);
 		}
 
+		return $this->configuredDefault($userId);
+	}
+
+	/**
+	 * Configured default target for the generic alias, by precedence:
+	 * personal setting -> group default -> server default. Returns '' when
+	 * nothing is configured; there is deliberately no hard-coded fallback.
+	 */
+	public function configuredDefault(?string $userId = null): string {
 		$registered = $this->registeredAgentIds();
 
 		if ($userId !== null && $userId !== '') {
@@ -90,7 +94,7 @@ class TargetRegistry {
 			}
 		}
 
-		return $this->defaultAgentTarget();
+		return $this->serverDefault();
 	}
 
 	/**
@@ -180,11 +184,16 @@ class TargetRegistry {
 		return array_values(array_unique($ids));
 	}
 
-	private function defaultAgentTarget(): string {
+	/**
+	 * Instance-wide default target (admin setting). Empty when unset; there is
+	 * deliberately no hard-coded fallback, so an unconfigured generic alias
+	 * relies on room-aware resolution (the single bot in the room) instead.
+	 */
+	private function serverDefault(): string {
 		return strtolower(trim($this->config->getAppValue(
 			Application::APP_ID,
 			self::DEFAULT_AGENT_CONFIG_KEY,
-			'nymble',
+			'',
 		)));
 	}
 }

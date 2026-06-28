@@ -14,7 +14,13 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 	</p>
 	<select id="smartcommands-default-agent">
 		<option value="" <?php if ($_['current'] === '') { p('selected'); } ?>>
-			<?php p($l->t('Server default (%s)', [$_['serverDefault']])); ?>
+			<?php
+			if ($_['serverDefault'] !== '') {
+				p($l->t('Server default (%s)', [$_['serverDefault']]));
+			} else {
+				p($l->t('Server default (the bot in the room)'));
+			}
+			?>
 		</option>
 		<?php foreach ($_['agents'] as $agentId): ?>
 			<option value="<?php p($agentId); ?>" <?php if ($_['current'] === $agentId) { p('selected'); } ?>>

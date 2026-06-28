@@ -71,17 +71,19 @@ class TalkBotInvokeListener implements IEventListener {
 		$target = strtolower($matches['target']);
 		$actorRef = (string)(($body['actor'] ?? [])['id'] ?? '');
 		[$actorType, $actorId] = array_pad(explode('/', $actorRef, 2), 2, '');
-		$resolvedTarget = $this->targetRegistry->resolveAlias(
+		$userId = $actorType === 'users' ? $actorId : null;
+		[$bot, $ambiguous] = $this->roomBotLookup->resolveRoomBot(
+			$roomToken,
 			$target,
-			$actorType === 'users' ? $actorId : null,
+			$this->targetRegistry->isGenericTarget($target),
+			$this->targetRegistry->configuredDefault($userId),
 		);
-		$bot = $this->roomBotLookup->findBotForTarget($roomToken, $resolvedTarget);
 		if ($bot === null) {
-			$this->logger->debug('Smart Picker Commands event bot bridge found no matching webhook bot', [
+			$this->logger->debug('Smart Picker Commands event bot bridge resolved no webhook bot', [
 				'app' => Application::APP_ID,
 				'target' => $target,
-				'resolvedTarget' => $resolvedTarget,
 				'roomToken' => $roomToken,
+				'ambiguous' => $ambiguous,
 			]);
 			return;
 		}
