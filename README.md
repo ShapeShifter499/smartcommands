@@ -1,8 +1,8 @@
 # Smart Picker Commands
 
-Smart Picker Commands is a Nextcloud Smart Picker app for AI-agent bot commands.
+Smart Picker Commands is a Nextcloud Smart Picker app for bot commands.
 
-The goal is to give Talk users a native `/` picker entry named **Agent commands**. The picker can list commands from OpenClaw first, and later from any agent service that publishes a simple manifest.
+The goal is to give Talk users a native `/` picker entry named **Bot commands**. The picker can list commands from OpenClaw first, and later from any bot service that publishes a simple manifest.
 
 ## Current Status
 
@@ -12,27 +12,27 @@ This is an early scaffold:
 - loads a custom Smart Picker element
 - exposes a local command manifest endpoint at `/apps/smartcommands/api/commands`
 - lets authenticated Nextcloud user accounts publish command manifests
-- inserts Talk-ready command text from explicitly registered agent manifests
+- inserts Talk-ready command text from explicitly registered bot manifests
 - experimentally bridges Talk messages like `/nymble status` to the matching configured Talk bot webhook
 - can also follow Nextcloud's in-process bot pattern with a `nextcloudapp://smartcommands` event bot, similar to `nextcloud/command_bot`
 
-The app does not ship opinionated default commands. The Smart Picker menu stays empty until an authenticated Nextcloud user account for an agent publishes a manifest. This keeps local command surfaces owned by the agents that actually support them.
-The slash bridge handles the Talk behavior where slash-style messages can be stored as normal messages without waking configured bot webhooks: when Talk stores `/<agent> ...` (or the generic `/agent ...`), the app signs and forwards a standard Talk bot webhook payload to the matching bot configured in that conversation.
+The app does not ship opinionated default commands. The Smart Picker menu stays empty until an authenticated Nextcloud user account for a bot publishes a manifest. This keeps local command surfaces owned by the bots that actually support them.
+The slash bridge handles the Talk behavior where slash-style messages can be stored as normal messages without waking configured bot webhooks: when Talk stores `/<bot> ...` (or the generic `/bot ...`), the app signs and forwards a standard Talk bot webhook payload to the matching bot configured in that conversation.
 
-Valid slash targets are derived from the registered agent manifests — publishing a manifest for a new agent (e.g. `ember`) makes `/ember ...` routable with no app code change. The generic `/agent` alias resolves to the app value `default_agent_target` (default: `nymble`):
+Valid slash targets are derived from the registered bot manifests — publishing a manifest for a new bot (e.g. `ember`) makes `/ember ...` routable with no app code change. The generic `/bot` alias resolves to the app value `default_bot_target` (default: `nymble`):
 
 ```bash
-php occ config:app:set smartcommands default_agent_target --value nymble
+php occ config:app:set smartcommands default_bot_target --value nymble
 ```
 
-The Smart Picker command list is room-aware: when opened inside a Talk conversation, only agents whose webhook bot is enabled in that conversation are listed. Outside a conversation context the full registry is shown.
+The Smart Picker command list is room-aware: when opened inside a Talk conversation, only bots whose webhook bot is enabled in that conversation are listed. Outside a conversation context the full registry is shown.
 
-Smart Picker Commands expects each agent to be set up with both a dedicated Nextcloud user account and a matching Talk bot account/record:
+Smart Picker Commands expects each bot to be set up with both a dedicated Nextcloud user account and a matching Talk bot account/record:
 
-- the Nextcloud user account, usually named after the agent, owns the Smart Picker command manifest through username/app-password authentication
+- the Nextcloud user account, usually named after the bot, owns the Smart Picker command manifest through username/app-password authentication
 - the Talk bot account/record in the relevant room receives signed webhook calls and posts replies
 
-For example, a `nymble` Nextcloud user publishes `/apps/smartcommands/api/agents/nymble`, while the `Nymble` Talk bot receives `/nymble ...` bridge webhooks in rooms where that bot is configured.
+For example, a `nymble` Nextcloud user publishes `/apps/smartcommands/api/bots/nymble`, while the `Nymble` Talk bot receives `/nymble ...` bridge webhooks in rooms where that bot is configured.
 
 ### Experimental Talk event bot bridge
 
@@ -42,13 +42,13 @@ Nextcloud's `command_bot` app uses a local Talk event bot instead of the depreca
 SECRET="$(openssl rand -hex 64)"
 php occ talk:bot:install --feature event \
   "Smart Picker Commands" "$SECRET" "nextcloudapp://smartcommands" \
-  "Bridge /nymble-style Talk messages to configured agent webhook bots"
+  "Bridge /nymble-style Talk messages to configured bot webhooks"
 
 php occ talk:bot:list --output=json_pretty
-php occ talk:bot:setup <agent-commands-bot-id> <room-token>
+php occ talk:bot:setup <bot-commands-bot-id> <room-token>
 ```
 
-When the event bot receives a `/<registered-agent> ...` or `/agent ...` message, Smart Picker Commands looks for the matching webhook bot in that room and forwards the normal signed Talk bot payload to that bot's webhook URL.
+When the event bot receives a `/<registered-bot> ...` or `/bot ...` message, Smart Picker Commands looks for the matching webhook bot in that room and forwards the normal signed Talk bot payload to that bot's webhook URL.
 
 ### Talk bot administration notes
 
@@ -114,11 +114,11 @@ Edit `~/.config/smartcommands/nextcloud-talk-poller.env` and set at least:
 ```text
 NEXTCLOUD_BASE_URL=https://cloud.example.com
 NEXTCLOUD_TALK_ROOM=room-token
-NEXTCLOUD_TALK_API_USER=agent-user
-NEXTCLOUD_TALK_API_PASSWORD_FILE=/path/to/agent-nextcloud-app-password.txt
+NEXTCLOUD_TALK_API_USER=bot-user
+NEXTCLOUD_TALK_API_PASSWORD_FILE=/path/to/bot-nextcloud-app-password.txt
 NEXTCLOUD_TALK_BOT_SECRET_FILE=/path/to/talk-bot-shared-secret.txt
 NEXTCLOUD_TALK_ALLOWED_SENDERS=users/example-user
-NEXTCLOUD_TALK_COMMAND_PREFIXES=/agent,/agent-user
+NEXTCLOUD_TALK_COMMAND_PREFIXES=/bot,/bot-user
 ```
 
 Then run a dry one-shot check before enabling the service:
@@ -136,36 +136,36 @@ Before publishing, replace the repository URLs in `appinfo/info.xml`, test again
 
 ## Manifest Direction
 
-The picker lists manifests published by authenticated Nextcloud user accounts. There is no built-in command manifest; each agent owns the labels and inserted command text it advertises. An agent's Nextcloud user account can only publish or delete the manifest whose id matches its authenticated Nextcloud user id, so one agent cannot overwrite another agent's command list.
+The picker lists manifests published by authenticated Nextcloud user accounts. There is no built-in command manifest; each bot owns the labels and inserted command text it advertises. A bot's Nextcloud user account can only publish or delete the manifest whose id matches its authenticated Nextcloud user id, so one bot cannot overwrite another bot's command list.
 
-Agent user accounts can publish or replace their command list with a normal app password:
+Bot user accounts can publish or replace their command list with a normal app password:
 
 ```bash
-curl -u 'agent-user:app-password' \
+curl -u 'bot-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -H 'Content-Type: application/json' \
   -X PUT \
-  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user' \
+  'https://cloud.example.com/apps/smartcommands/api/bots/bot-user' \
   --data '{
-    "name": "Agent Display Name",
+    "name": "Bot Display Name",
     "commands": [
       {
         "id": "help",
         "label": "Help",
-        "description": "Show this agent command help.",
-        "insert": "/agent-user help"
+        "description": "Show this bot command help.",
+        "insert": "/bot-user help"
       }
     ]
   }'
 ```
 
-The app stores manifests under the publishing Nextcloud user account, so an agent can update or delete its own list without admin rights:
+The app stores manifests under the publishing Nextcloud user account, so a bot can update or delete its own list without admin rights:
 
 ```bash
-curl -u 'agent-user:app-password' \
+curl -u 'bot-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -X DELETE \
-  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user'
+  'https://cloud.example.com/apps/smartcommands/api/bots/bot-user'
 ```
 
 The manifest contract is intentionally small:
@@ -177,7 +177,7 @@ The manifest contract is intentionally small:
 
 Future versions can evolve this into one of these:
 
-- admin-configured agent manifests
+- admin-configured bot manifests
 - a signed local JSON file
-- a trusted service endpoint per agent
+- a trusted service endpoint per bot
 - a small app settings page for command registration

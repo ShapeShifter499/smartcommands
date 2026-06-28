@@ -6,7 +6,7 @@ import path from "node:path";
 
 const DEFAULT_WEBHOOK_URL = "http://127.0.0.1:8788/nextcloud-talk-webhook";
 const DEFAULT_STATE_DIR = path.join(os.homedir(), ".local/state/smartcommands/nextcloud-talk-poller");
-const DEFAULT_COMMAND_PREFIXES = ["/agent", "/nymble", "/aurel"];
+const DEFAULT_COMMAND_PREFIXES = ["/bot", "/nymble", "/aurel"];
 
 function envList(name) {
   return String(process.env[name] || "")
@@ -138,7 +138,7 @@ Required via flags or env:
   --allowed-senders CSV          NEXTCLOUD_TALK_ALLOWED_SENDERS
 
 Optional:
-  --command-prefixes CSV         NEXTCLOUD_TALK_COMMAND_PREFIXES, default /agent,/nymble,/aurel
+  --command-prefixes CSV         NEXTCLOUD_TALK_COMMAND_PREFIXES, default /bot,/nymble,/aurel
   --webhook-url URL              NEXTCLOUD_TALK_WEBHOOK_URL, default ${DEFAULT_WEBHOOK_URL}
   --state-dir PATH               NEXTCLOUD_TALK_POLLER_STATE_DIR
   --from-id N                    Start after Talk message id N for this run

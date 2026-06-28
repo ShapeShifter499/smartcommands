@@ -1,4 +1,4 @@
-// Plain JS (no build step): saves admin server/group defaults for /agent.
+// Plain JS (no build step): saves admin server/group defaults for /bot.
 document.addEventListener('DOMContentLoaded', () => {
 	const status = document.getElementById('smartcommands-admin-status')
 
@@ -21,14 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	document.getElementById('smartcommands-admin-server-default')?.addEventListener('change', (event) => {
-		save('/apps/smartcommands/api/admin/default-agent', { agent: event.target.value })
+		save('/apps/smartcommands/api/admin/default-bot', { bot: event.target.value })
 	})
 
 	document.querySelectorAll('.smartcommands-admin-group').forEach((select) => {
 		select.addEventListener('change', () => {
 			save('/apps/smartcommands/api/admin/group-default', {
 				group: select.dataset.group,
-				agent: select.value,
+				bot: select.value,
 			})
 		})
 	})

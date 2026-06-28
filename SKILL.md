@@ -5,27 +5,27 @@ description: Use when integrating an AI agent with the Smart Picker Commands Nex
 
 # Smart Picker Commands Skill
 
-Use this repo as the Nextcloud-side bridge between Talk, Smart Picker command manifests, and AI-agent webhook bots.
+Use this repo as the Nextcloud-side bridge between Talk, Smart Picker command manifests, and bot webhooks.
 
 ## Ground Rules
 
-- Smart Picker Commands ships with no default commands. The picker must stay empty until an authenticated Nextcloud user account for an agent publishes a manifest.
-- Each agent setup is expected to have both a dedicated Nextcloud user account and a matching Talk bot account/record. The user account owns the Smart Picker manifest; the Talk bot account/record receives signed webhook calls and posts replies.
-- Each agent's Nextcloud user account can only publish or delete the manifest whose id matches its authenticated Nextcloud user id.
+- Smart Picker Commands ships with no default commands. The picker must stay empty until an authenticated Nextcloud user account for a bot publishes a manifest.
+- Each bot setup is expected to have both a dedicated Nextcloud user account and a matching Talk bot account/record. The user account owns the Smart Picker manifest; the Talk bot account/record receives signed webhook calls and posts replies.
+- Each bot's Nextcloud user account can only publish or delete the manifest whose id matches its authenticated Nextcloud user id.
 - Do not store secrets in manifests, docs, commits, logs, or chat. Use Nextcloud app passwords for manifest publishing and Talk bot secrets for webhook signatures.
 - Do not assume source changes are live. After copying a changed app checkout into Nextcloud, run `php occ upgrade` and restart the Nextcloud container or PHP-FPM process to clear old app/event-listener state.
-- Do not add new command prefixes to docs until the app code actually routes them. Current slash-bridge aliases are `/agent`, `/nymble`, and `/aurel`.
+- Do not add new command prefixes to docs until the app code actually routes them. Current slash-bridge aliases are `/bot`, `/nymble`, and `/aurel`.
 
-## Attach An Agent
+## Attach A Bot
 
-1. Create or identify a dedicated Nextcloud user account for the agent.
+1. Create or identify a dedicated Nextcloud user account for the bot.
 2. Create a Nextcloud app password for that account.
-3. Install or update the agent's matching Talk webhook bot:
+3. Install or update the bot's matching Talk webhook bot:
 
 ```bash
 php occ talk:bot:install \
   -f webhook -f response -f reaction -- \
-  "<bot name>" "<shared-secret>" "https://agent.example.com/nextcloud-talk-webhook" \
+  "<bot name>" "<shared-secret>" "https://bot.example.com/nextcloud-talk-webhook" \
   "<description>"
 ```
 
@@ -47,22 +47,22 @@ php occ talk:bot:state <bot-id> 1 \
 
 ## Publish Commands
 
-Publish the command menu as the agent's Nextcloud user account. The `{agent-id}` path segment must match the authenticated Nextcloud user id. The inserted text should be whatever the matching Talk bot actually supports in Talk.
+Publish the command menu as the bot's Nextcloud user account. The `{bot-id}` path segment must match the authenticated Nextcloud user id. The inserted text should be whatever the matching Talk bot actually supports in Talk.
 
 ```bash
-curl -u 'agent-user:app-password' \
+curl -u 'bot-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -H 'Content-Type: application/json' \
   -X PUT \
-  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user' \
+  'https://cloud.example.com/apps/smartcommands/api/bots/bot-user' \
   --data '{
-    "name": "Agent Display Name",
+    "name": "Bot Display Name",
     "commands": [
       {
         "id": "status",
         "label": "Status",
-        "description": "Show current agent status.",
-        "insert": "/agent status"
+        "description": "Show current bot status.",
+        "insert": "/bot status"
       }
     ]
   }'
@@ -78,10 +78,10 @@ Manifest rules:
 Remove a manifest with:
 
 ```bash
-curl -u 'agent-user:app-password' \
+curl -u 'bot-user:app-password' \
   -H 'OCS-APIRequest: true' \
   -X DELETE \
-  'https://cloud.example.com/apps/smartcommands/api/agents/agent-user'
+  'https://cloud.example.com/apps/smartcommands/api/bots/bot-user'
 ```
 
 ## Verify
@@ -89,15 +89,15 @@ curl -u 'agent-user:app-password' \
 Check the manifest endpoint:
 
 ```bash
-curl -u 'agent-user:app-password' \
+curl -u 'bot-user:app-password' \
   -H 'OCS-APIRequest: true' \
   'https://cloud.example.com/apps/smartcommands/api/commands'
 ```
 
 Then test from Talk:
 
-1. Open a room containing the agent's Talk bot.
-2. Open the Smart Picker and select the agent command.
+1. Open a room containing the bot's Talk bot.
+2. Open the Smart Picker and select the bot command.
 3. Send the inserted text.
 4. Confirm Nextcloud logs show the Smart Picker Commands slash bridge invoking the webhook with `statusCode: "200"`.
 
@@ -110,7 +110,7 @@ tail -n 120 /var/www/html/data/nextcloud.log \
 
 ## Optional OpenClaw Poller Fallback
 
-Use `contrib/openclaw/nextcloud-talk-poller` only as a fallback when Talk app/event hooks do not reliably wake the agent webhook. It polls the Talk chat API, avoids moving the room read marker, waits a handoff grace period, skips replay if a bot already answered, signs an ActivityStreams `Create` payload with the Talk bot secret, and posts to the OpenClaw Nextcloud Talk webhook.
+Use `contrib/openclaw/nextcloud-talk-poller` only as a fallback when Talk app/event hooks do not reliably wake the bot webhook. It polls the Talk chat API, avoids moving the room read marker, waits a handoff grace period, skips replay if a bot already answered, signs an ActivityStreams `Create` payload with the Talk bot secret, and posts to the OpenClaw Nextcloud Talk webhook.
 
 Install the generic examples outside the repo:
 

@@ -10,14 +10,14 @@ use OCP\IGroupManager;
 use OCP\IUserManager;
 
 /**
- * Derives valid slash-command targets from the registered agent manifests
- * instead of a hardcoded agent list, so onboarding a new agent only requires
+ * Derives valid slash-command targets from the registered bot manifests
+ * instead of a hardcoded bot list, so onboarding a new bot only requires
  * publishing a manifest (no app code change).
  */
 class TargetRegistry {
-	private const GENERIC_TARGET = 'agent';
-	private const DEFAULT_AGENT_CONFIG_KEY = 'default_agent_target';
-	private const GROUP_DEFAULTS_CONFIG_KEY = 'group_default_agent_targets';
+	private const GENERIC_TARGET = 'bot';
+	private const DEFAULT_BOT_CONFIG_KEY = 'default_bot_target';
+	private const GROUP_DEFAULTS_CONFIG_KEY = 'group_default_bot_targets';
 
 	public function __construct(
 		private IConfig $config,
@@ -28,14 +28,14 @@ class TargetRegistry {
 
 	/**
 	 * Lowercase target tokens accepted after a leading slash, including the
-	 * generic "agent" alias.
+	 * generic "bot" alias.
 	 *
 	 * @return string[]
 	 */
 	public function targets(): array {
 		$targets = [self::GENERIC_TARGET];
-		foreach ($this->registeredAgentIds() as $agentId) {
-			$targets[] = $agentId;
+		foreach ($this->registeredBotIds() as $botId) {
+			$targets[] = $botId;
 		}
 
 		return array_values(array_unique($targets));
@@ -75,13 +75,13 @@ class TargetRegistry {
 	 * nothing is configured; there is deliberately no hard-coded fallback.
 	 */
 	public function configuredDefault(?string $userId = null): string {
-		$registered = $this->registeredAgentIds();
+		$registered = $this->registeredBotIds();
 
 		if ($userId !== null && $userId !== '') {
 			$personal = strtolower(trim($this->config->getUserValue(
 				$userId,
 				Application::APP_ID,
-				self::DEFAULT_AGENT_CONFIG_KEY,
+				self::DEFAULT_BOT_CONFIG_KEY,
 				'',
 			)));
 			if ($personal !== '' && in_array($personal, $registered, true)) {
@@ -98,7 +98,7 @@ class TargetRegistry {
 	}
 
 	/**
-	 * @return array<string, string> groupId => agentId (admin-managed)
+	 * @return array<string, string> groupId => botId (admin-managed)
 	 */
 	public function groupDefaults(): array {
 		$raw = $this->config->getAppValue(Application::APP_ID, self::GROUP_DEFAULTS_CONFIG_KEY, '{}');
@@ -113,12 +113,12 @@ class TargetRegistry {
 			: [];
 	}
 
-	public function setGroupDefault(string $groupId, string $agentId): void {
+	public function setGroupDefault(string $groupId, string $botId): void {
 		$map = $this->groupDefaults();
-		if ($agentId === '') {
+		if ($botId === '') {
 			unset($map[$groupId]);
 		} else {
-			$map[$groupId] = $agentId;
+			$map[$groupId] = $botId;
 		}
 		$this->config->setAppValue(
 			Application::APP_ID,
@@ -129,7 +129,7 @@ class TargetRegistry {
 
 	/**
 	 * First mapped group (sorted by group id, for determinism when a user is
-	 * in several mapped groups) whose agent is still registered.
+	 * in several mapped groups) whose bot is still registered.
 	 */
 	private function groupDefaultForUser(string $userId, array $registered): ?string {
 		$map = $this->groupDefaults();
@@ -145,9 +145,9 @@ class TargetRegistry {
 		$groupIds = $this->groupManager->getUserGroupIds($user);
 		sort($groupIds);
 		foreach ($groupIds as $groupId) {
-			$agentId = strtolower(trim((string)($map[$groupId] ?? '')));
-			if ($agentId !== '' && in_array($agentId, $registered, true)) {
-				return $agentId;
+			$botId = strtolower(trim((string)($map[$groupId] ?? '')));
+			if ($botId !== '' && in_array($botId, $registered, true)) {
+				return $botId;
 			}
 		}
 
@@ -155,12 +155,12 @@ class TargetRegistry {
 	}
 
 	/**
-	 * @return string[] lowercase agent ids with a registered manifest
+	 * @return string[] lowercase bot ids with a registered manifest
 	 */
-	public function registeredAgentIds(): array {
+	public function registeredBotIds(): array {
 		$ids = [];
 		foreach ($this->config->getAppKeys(Application::APP_ID) as $key) {
-			if (!str_starts_with($key, 'agent:')) {
+			if (!str_starts_with($key, 'bot:')) {
 				continue;
 			}
 			$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
@@ -192,7 +192,7 @@ class TargetRegistry {
 	private function serverDefault(): string {
 		return strtolower(trim($this->config->getAppValue(
 			Application::APP_ID,
-			self::DEFAULT_AGENT_CONFIG_KEY,
+			self::DEFAULT_BOT_CONFIG_KEY,
 			'',
 		)));
 	}

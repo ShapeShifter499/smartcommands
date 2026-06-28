@@ -27,7 +27,7 @@ class ManifestController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * When a Talk room token is supplied, only agents whose webhook bot is
+	 * When a Talk room token is supplied, only bots whose webhook bot is
 	 * enabled in that conversation are returned, so the picker does not offer
 	 * commands that would go nowhere.
 	 */
@@ -41,12 +41,12 @@ class ManifestController extends Controller {
 			$manifests = array_values(array_filter(
 				$manifests,
 				function (array $manifest) use ($bots): bool {
-					$agentId = strtolower((string)($manifest['id'] ?? ''));
-					if ($agentId === '') {
+					$botId = strtolower((string)($manifest['id'] ?? ''));
+					if ($botId === '') {
 						return false;
 					}
 					foreach ($bots as $bot) {
-						if ($this->roomBotLookup->botMatchesTarget($bot['name'], $agentId)) {
+						if ($this->roomBotLookup->botMatchesTarget($bot['name'], $botId)) {
 							return true;
 						}
 					}
@@ -57,7 +57,7 @@ class ManifestController extends Controller {
 		}
 
 		return new JSONResponse([
-			'agents' => $manifests,
+			'bots' => $manifests,
 			'filteredByRoom' => $filtered ? $room : null,
 		]);
 	}
@@ -66,32 +66,32 @@ class ManifestController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	public function upsertAgent(string $agentId): JSONResponse {
+	public function upsertBot(string $botId): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return $this->error('Authentication required.', Http::STATUS_UNAUTHORIZED);
 		}
 
-		$agentId = trim($agentId);
-		if (!$this->isValidId($agentId)) {
-			return $this->error('Agent id must contain only letters, numbers, underscores, and hyphens.', Http::STATUS_BAD_REQUEST);
+		$botId = trim($botId);
+		if (!$this->isValidId($botId)) {
+			return $this->error('Bot id must contain only letters, numbers, underscores, and hyphens.', Http::STATUS_BAD_REQUEST);
 		}
 
 		$userId = $user->getUID();
-		if ($agentId !== $userId) {
-			return $this->error('Agent id must match the authenticated user id.', Http::STATUS_FORBIDDEN);
+		if ($botId !== $userId) {
+			return $this->error('Bot id must match the authenticated user id.', Http::STATUS_FORBIDDEN);
 		}
 
 		$params = $this->request->getParams();
-		$name = trim((string)($params['name'] ?? $agentId));
+		$name = trim((string)($params['name'] ?? $botId));
 		$commands = $params['commands'] ?? null;
 		if (!is_array($commands)) {
 			return $this->error('Manifest must include a commands array.', Http::STATUS_BAD_REQUEST);
 		}
 
 		$manifest = [
-			'id' => $agentId,
-			'name' => $name !== '' ? $name : $agentId,
+			'id' => $botId,
+			'name' => $name !== '' ? $name : $botId,
 			'owner' => $userId,
 			'updatedAt' => time(),
 			'commands' => $this->normalizeCommands($commands),
@@ -100,32 +100,32 @@ class ManifestController extends Controller {
 			return $this->error('Manifest must include at least one valid command.', Http::STATUS_BAD_REQUEST);
 		}
 
-		$key = $this->manifestKey($userId, $agentId);
+		$key = $this->manifestKey($userId, $botId);
 		$this->config->setAppValue(Application::APP_ID, $key, json_encode($manifest, JSON_THROW_ON_ERROR));
 
-		return new JSONResponse(['agent' => $manifest], Http::STATUS_CREATED);
+		return new JSONResponse(['bot' => $manifest], Http::STATUS_CREATED);
 	}
 
 	/**
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	public function deleteAgent(string $agentId): JSONResponse {
+	public function deleteBot(string $botId): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return $this->error('Authentication required.', Http::STATUS_UNAUTHORIZED);
 		}
 
-		if (!$this->isValidId($agentId)) {
-			return $this->error('Agent id must contain only letters, numbers, underscores, and hyphens.', Http::STATUS_BAD_REQUEST);
+		if (!$this->isValidId($botId)) {
+			return $this->error('Bot id must contain only letters, numbers, underscores, and hyphens.', Http::STATUS_BAD_REQUEST);
 		}
 
 		$userId = $user->getUID();
-		if ($agentId !== $userId) {
-			return $this->error('Agent id must match the authenticated user id.', Http::STATUS_FORBIDDEN);
+		if ($botId !== $userId) {
+			return $this->error('Bot id must match the authenticated user id.', Http::STATUS_FORBIDDEN);
 		}
 
-		$this->config->deleteAppValue(Application::APP_ID, $this->manifestKey($userId, $agentId));
+		$this->config->deleteAppValue(Application::APP_ID, $this->manifestKey($userId, $botId));
 
 		return new JSONResponse(['deleted' => true]);
 	}
@@ -133,7 +133,7 @@ class ManifestController extends Controller {
 	private function registeredManifests(): array {
 		$manifests = [];
 		foreach ($this->config->getAppKeys(Application::APP_ID) as $key) {
-			if (!str_starts_with($key, 'agent:')) {
+			if (!str_starts_with($key, 'bot:')) {
 				continue;
 			}
 			$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
@@ -184,8 +184,8 @@ class ManifestController extends Controller {
 		return preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id) === 1;
 	}
 
-	private function manifestKey(string $userId, string $agentId): string {
-		return 'agent:' . rawurlencode($userId) . ':' . rawurlencode($agentId);
+	private function manifestKey(string $userId, string $botId): string {
+		return 'bot:' . rawurlencode($userId) . ':' . rawurlencode($botId);
 	}
 
 	private function error(string $message, int $status): JSONResponse {

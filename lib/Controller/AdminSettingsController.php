@@ -27,34 +27,34 @@ class AdminSettingsController extends Controller {
 		parent::__construct(Application::APP_ID, $request);
 	}
 
-	public function setDefaultAgent(string $agent = ''): JSONResponse {
-		$agent = strtolower(trim($agent));
-		if ($agent !== '' && !in_array($agent, $this->targetRegistry->registeredAgentIds(), true)) {
-			return new JSONResponse(['error' => 'Unknown agent.'], Http::STATUS_BAD_REQUEST);
+	public function setDefaultBot(string $bot = ''): JSONResponse {
+		$bot = strtolower(trim($bot));
+		if ($bot !== '' && !in_array($bot, $this->targetRegistry->registeredBotIds(), true)) {
+			return new JSONResponse(['error' => 'Unknown bot.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($agent === '') {
-			$this->config->deleteAppValue(Application::APP_ID, 'default_agent_target');
+		if ($bot === '') {
+			$this->config->deleteAppValue(Application::APP_ID, 'default_bot_target');
 		} else {
-			$this->config->setAppValue(Application::APP_ID, 'default_agent_target', $agent);
+			$this->config->setAppValue(Application::APP_ID, 'default_bot_target', $bot);
 		}
 
-		return new JSONResponse(['agent' => $agent]);
+		return new JSONResponse(['bot' => $bot]);
 	}
 
-	public function setGroupDefault(string $group = '', string $agent = ''): JSONResponse {
+	public function setGroupDefault(string $group = '', string $bot = ''): JSONResponse {
 		$group = trim($group);
 		if ($group === '' || !$this->groupManager->groupExists($group)) {
 			return new JSONResponse(['error' => 'Unknown group.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$agent = strtolower(trim($agent));
-		if ($agent !== '' && !in_array($agent, $this->targetRegistry->registeredAgentIds(), true)) {
-			return new JSONResponse(['error' => 'Unknown agent.'], Http::STATUS_BAD_REQUEST);
+		$bot = strtolower(trim($bot));
+		if ($bot !== '' && !in_array($bot, $this->targetRegistry->registeredBotIds(), true)) {
+			return new JSONResponse(['error' => 'Unknown bot.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$this->targetRegistry->setGroupDefault($group, $agent);
+		$this->targetRegistry->setGroupDefault($group, $bot);
 
-		return new JSONResponse(['group' => $group, 'agent' => $agent]);
+		return new JSONResponse(['group' => $group, 'bot' => $bot]);
 	}
 }

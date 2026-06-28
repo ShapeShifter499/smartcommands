@@ -28,23 +28,23 @@ class PersonalSettingsController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 */
-	public function setDefaultAgent(string $agent = ''): JSONResponse {
+	public function setDefaultBot(string $bot = ''): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => 'Authentication required.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$agent = strtolower(trim($agent));
-		if ($agent !== '' && !in_array($agent, $this->targetRegistry->registeredAgentIds(), true)) {
-			return new JSONResponse(['error' => 'Unknown agent.'], Http::STATUS_BAD_REQUEST);
+		$bot = strtolower(trim($bot));
+		if ($bot !== '' && !in_array($bot, $this->targetRegistry->registeredBotIds(), true)) {
+			return new JSONResponse(['error' => 'Unknown bot.'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($agent === '') {
-			$this->config->deleteUserValue($user->getUID(), Application::APP_ID, 'default_agent_target');
+		if ($bot === '') {
+			$this->config->deleteUserValue($user->getUID(), Application::APP_ID, 'default_bot_target');
 		} else {
-			$this->config->setUserValue($user->getUID(), Application::APP_ID, 'default_agent_target', $agent);
+			$this->config->setUserValue($user->getUID(), Application::APP_ID, 'default_bot_target', $bot);
 		}
 
-		return new JSONResponse(['agent' => $agent]);
+		return new JSONResponse(['bot' => $bot]);
 	}
 }

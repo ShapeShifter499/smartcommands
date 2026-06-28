@@ -11,7 +11,7 @@
   color: var(--color-error);
 }
 
-.smartcommands-picker__agent {
+.smartcommands-picker__bot {
   margin: 4px 4px 2px;
   color: var(--color-text-maxcontrast);
   font-size: 12px;

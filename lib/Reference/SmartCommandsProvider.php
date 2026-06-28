@@ -27,13 +27,13 @@ class SmartCommandsProvider extends ADiscoverableReferenceProvider {
 	public function getTitle(): string {
 		// Include the slash targets so the composer's provider search matches
 		// partial command typing such as "/emb" against this entry's title.
-		$agentIds = $this->targetRegistry->registeredAgentIds();
-		if ($agentIds === []) {
-			return $this->l10n->t('Agent commands');
+		$botIds = $this->targetRegistry->registeredBotIds();
+		if ($botIds === []) {
+			return $this->l10n->t('Bot commands');
 		}
 
-		$targets = implode(', ', array_map(static fn (string $id): string => '/' . $id, $agentIds));
-		return $this->l10n->t('Agent commands') . ' (' . $targets . ')';
+		$targets = implode(', ', array_map(static fn (string $id): string => '/' . $id, $botIds));
+		return $this->l10n->t('Bot commands') . ' (' . $targets . ')';
 	}
 
 	public function getOrder(): int {
@@ -45,7 +45,7 @@ class SmartCommandsProvider extends ADiscoverableReferenceProvider {
 	}
 
 	public function matchReference(string $referenceText): bool {
-		return str_starts_with($referenceText, 'agent-command://');
+		return str_starts_with($referenceText, 'bot-command://');
 	}
 
 	public function resolveReference(string $referenceText): ?IReference {
@@ -53,15 +53,15 @@ class SmartCommandsProvider extends ADiscoverableReferenceProvider {
 			return null;
 		}
 
-		$command = substr($referenceText, strlen('agent-command://'));
+		$command = substr($referenceText, strlen('bot-command://'));
 		$reference = new Reference($referenceText);
-		$reference->setTitle($this->l10n->t('Agent command: %s', [$command]));
-		$reference->setDescription($this->l10n->t('AI-agent command selected from Smart Picker'));
+		$reference->setTitle($this->l10n->t('Bot command: %s', [$command]));
+		$reference->setDescription($this->l10n->t('Bot command selected from Smart Picker'));
 		$reference->setUrl($referenceText);
-		$reference->setRichObject('agent-command', [
+		$reference->setRichObject('bot-command', [
 			'id' => $referenceText,
 			'name' => $command,
-			'description' => $this->l10n->t('AI-agent command'),
+			'description' => $this->l10n->t('Bot command'),
 		]);
 
 		return $reference;

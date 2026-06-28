@@ -8,11 +8,11 @@ declare(strict_types=1);
 script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 ?>
 <div class="section" id="smartcommands-personal">
-	<h2><?php p($l->t('Agent commands')); ?></h2>
+	<h2><?php p($l->t('Bot commands')); ?></h2>
 	<p class="settings-hint">
-		<?php p($l->t('Which agent should handle the generic /agent command when you use it in Talk.')); ?>
+		<?php p($l->t('Which bot should handle the generic /bot command when you use it in Talk.')); ?>
 	</p>
-	<select id="smartcommands-default-agent">
+	<select id="smartcommands-default-bot">
 		<option value="" <?php if ($_['current'] === '') { p('selected'); } ?>>
 			<?php
 			if ($_['serverDefault'] !== '') {
@@ -22,11 +22,11 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 			}
 			?>
 		</option>
-		<?php foreach ($_['agents'] as $agentId): ?>
-			<option value="<?php p($agentId); ?>" <?php if ($_['current'] === $agentId) { p('selected'); } ?>>
-				/<?php p($agentId); ?>
+		<?php foreach ($_['bots'] as $botId): ?>
+			<option value="<?php p($botId); ?>" <?php if ($_['current'] === $botId) { p('selected'); } ?>>
+				/<?php p($botId); ?>
 			</option>
 		<?php endforeach; ?>
 	</select>
-	<span id="smartcommands-default-agent-status" aria-live="polite"></span>
+	<span id="smartcommands-default-bot-status" aria-live="polite"></span>
 </div>

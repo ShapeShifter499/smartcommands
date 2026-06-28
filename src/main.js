@@ -19,7 +19,7 @@ class SmartCommandsPicker extends HTMLElement {
       const room = currentTalkRoomToken()
       const url = generateUrl('/apps/smartcommands/api/commands')
       const response = await axios.get(url, { params: room ? { room } : {} })
-      this.renderCommands(response.data.agents ?? [], response.data.filteredByRoom ?? null)
+      this.renderCommands(response.data.bots ?? [], response.data.filteredByRoom ?? null)
     } catch (error) {
       this.renderError(error)
     }
@@ -33,28 +33,28 @@ class SmartCommandsPicker extends HTMLElement {
     this.innerHTML = `<div class="smartcommands-picker smartcommands-picker--error">${escapeHtml(t('smartcommands', 'Commands could not be loaded.'))}</div>`
   }
 
-  renderCommands(agents, filteredByRoom) {
-    if (agents.length === 0) {
+  renderCommands(bots, filteredByRoom) {
+    if (bots.length === 0) {
       const message = filteredByRoom
-        ? t('smartcommands', 'No agent bots are enabled in this conversation.')
-        : t('smartcommands', 'No agent commands configured.')
+        ? t('smartcommands', 'No bots are enabled in this conversation.')
+        : t('smartcommands', 'No bot commands configured.')
       this.innerHTML = `<div class="smartcommands-picker">${escapeHtml(message)}</div>`
       return
     }
 
-    const body = agents.flatMap((agent) => {
-      const commands = agent.commands ?? []
+    const body = bots.flatMap((bot) => {
+      const commands = bot.commands ?? []
       return [
-        `<div class="smartcommands-picker__agent">${escapeHtml(agent.name ?? agent.id)}</div>`,
+        `<div class="smartcommands-picker__bot">${escapeHtml(bot.name ?? bot.id)}</div>`,
         ...commands.map((command) => this.renderCommand(command)),
       ]
     }).join('')
 
     this.innerHTML = `<div class="smartcommands-picker">${body}</div>`
 
-    this.querySelectorAll('[data-agent-command]').forEach((button) => {
+    this.querySelectorAll('[data-bot-command]').forEach((button) => {
       button.addEventListener('click', () => {
-        this.dispatchCommand(button.dataset.agentCommand ?? '')
+        this.dispatchCommand(button.dataset.botCommand ?? '')
       })
     })
   }
@@ -62,7 +62,7 @@ class SmartCommandsPicker extends HTMLElement {
   renderCommand(command) {
     const insert = command.insert ?? ''
     return `
-      <button type="button" class="smartcommands-picker__command" data-agent-command="${escapeAttribute(insert)}">
+      <button type="button" class="smartcommands-picker__command" data-bot-command="${escapeAttribute(insert)}">
         <span class="smartcommands-picker__label">${escapeHtml(command.label ?? command.id ?? insert)}</span>
         <span class="smartcommands-picker__description">${escapeHtml(command.description ?? insert)}</span>
       </button>
