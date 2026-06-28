@@ -57,4 +57,18 @@ class AdminSettingsController extends Controller {
 
 		return new JSONResponse(['group' => $group, 'bot' => $bot]);
 	}
+
+	public function deleteManifest(string $owner = '', string $botId = ''): JSONResponse {
+		$owner = trim($owner);
+		$botId = trim($botId);
+		if ($owner === '' || $botId === '') {
+			return new JSONResponse(['error' => 'owner and botId are required.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if (!$this->targetRegistry->deleteManifest($owner, $botId)) {
+			return new JSONResponse(['error' => 'Manifest not found.'], Http::STATUS_NOT_FOUND);
+		}
+
+		return new JSONResponse(['deleted' => true]);
+	}
 }

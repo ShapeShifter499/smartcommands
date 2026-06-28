@@ -210,7 +210,11 @@ class TargetRegistry {
 				continue;
 			}
 
-			$id = strtolower(trim((string)($manifest['id'] ?? '')));
+			// Preserve the original case: this id is half of the storage key
+			// (bot:<owner>:<id>) that admin delete reconstructs, so lowercasing
+			// it would break deletion for mixed-case account ids. Bot matching
+			// elsewhere is already case-insensitive.
+			$id = trim((string)($manifest['id'] ?? ''));
 			if ($id === '') {
 				continue;
 			}
@@ -238,6 +242,20 @@ class TargetRegistry {
 
 		usort($manifests, static fn (array $a, array $b): int => strcmp($a['id'], $b['id']));
 		return $manifests;
+	}
+
+	/**
+	 * Deletes a published manifest by owner account and bot id (admin
+	 * housekeeping for stale or decommissioned bots). Returns false when no
+	 * such manifest exists. Mirrors ManifestController::manifestKey().
+	 */
+	public function deleteManifest(string $owner, string $botId): bool {
+		$key = 'bot:' . rawurlencode($owner) . ':' . rawurlencode($botId);
+		if ($this->config->getAppValue(Application::APP_ID, $key, '') === '') {
+			return false;
+		}
+		$this->config->deleteAppValue(Application::APP_ID, $key);
+		return true;
 	}
 
 	/**
