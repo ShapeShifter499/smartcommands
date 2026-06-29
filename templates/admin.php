@@ -61,6 +61,44 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 	</table>
 	<span id="smartcommands-admin-status" aria-live="polite"></span>
 
+	<h3><?php p($l->t('Global commands')); ?></h3>
+	<p class="settings-hint">
+		<?php p($l->t('Instance-wide commands you author here. They belong to no bot, appear in the Smart Picker for every user, and are shown in any conversation.')); ?>
+	</p>
+	<div id="smartcommands-global-editor">
+		<table class="grid">
+			<thead>
+				<tr>
+					<th><?php p($l->t('Insert text')); ?></th>
+					<th><?php p($l->t('Label')); ?></th>
+					<th><?php p($l->t('Description')); ?></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody id="smartcommands-global-commands">
+				<?php foreach ($_['globalCommands'] as $command): ?>
+					<tr class="smartcommands-cmd-row">
+						<td><input type="text" class="smartcommands-cmd-insert" value="<?php p($command['insert']); ?>"></td>
+						<td><input type="text" class="smartcommands-cmd-label" value="<?php p($command['label']); ?>"></td>
+						<td><input type="text" class="smartcommands-cmd-desc" value="<?php p($command['description']); ?>"></td>
+						<td><button type="button" class="smartcommands-cmd-remove"><?php p($l->t('Remove')); ?></button></td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+		<button type="button" id="smartcommands-global-add"><?php p($l->t('Add command')); ?></button>
+		<button type="button" id="smartcommands-global-save"><?php p($l->t('Save global commands')); ?></button>
+		<span id="smartcommands-global-status" aria-live="polite"></span>
+		<template id="smartcommands-global-template">
+			<tr class="smartcommands-cmd-row">
+				<td><input type="text" class="smartcommands-cmd-insert"></td>
+				<td><input type="text" class="smartcommands-cmd-label"></td>
+				<td><input type="text" class="smartcommands-cmd-desc"></td>
+				<td><button type="button" class="smartcommands-cmd-remove"><?php p($l->t('Remove')); ?></button></td>
+			</tr>
+		</template>
+	</div>
+
 	<h3><?php p($l->t('Registered commands')); ?></h3>
 	<p class="settings-hint">
 		<?php p($l->t('Commands each bot has published to the Smart Picker. Published by each bot\'s own account, so this view is read-only.')); ?>

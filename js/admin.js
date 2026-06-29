@@ -42,6 +42,64 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	})
 
+	// Global commands editor (admin-authored, instance-wide).
+	const globalEditor = document.getElementById('smartcommands-global-editor')
+	if (globalEditor) {
+		const tbody = document.getElementById('smartcommands-global-commands')
+		const template = document.getElementById('smartcommands-global-template')
+		const globalStatus = document.getElementById('smartcommands-global-status')
+
+		const setGlobalStatus = (text) => {
+			globalStatus.textContent = text
+			if (text !== '…' && text !== '') {
+				setTimeout(() => { globalStatus.textContent = '' }, 3000)
+			}
+		}
+
+		const slugify = (value, index) => {
+			const slug = value.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64)
+			return slug || ('cmd' + (index + 1))
+		}
+
+		tbody.addEventListener('click', (event) => {
+			if (event.target.classList.contains('smartcommands-cmd-remove')) {
+				event.target.closest('.smartcommands-cmd-row')?.remove()
+			}
+		})
+
+		document.getElementById('smartcommands-global-add')?.addEventListener('click', () => {
+			tbody.appendChild(template.content.cloneNode(true))
+		})
+
+		document.getElementById('smartcommands-global-save')?.addEventListener('click', async () => {
+			const commands = []
+			tbody.querySelectorAll('.smartcommands-cmd-row').forEach((row, index) => {
+				const insert = row.querySelector('.smartcommands-cmd-insert').value.trim()
+				if (insert === '') {
+					return
+				}
+				const label = row.querySelector('.smartcommands-cmd-label').value.trim()
+				commands.push({
+					id: slugify(label || insert, index),
+					label,
+					description: row.querySelector('.smartcommands-cmd-desc').value.trim(),
+					insert,
+				})
+			})
+			setGlobalStatus('…')
+			try {
+				const response = await fetch(OC.generateUrl('/apps/smartcommands/api/admin/global-commands'), {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json', requesttoken: OC.requestToken },
+					body: JSON.stringify({ commands }),
+				})
+				setGlobalStatus(response.ok ? t('smartcommands', 'Saved') : t('smartcommands', 'Could not save'))
+			} catch (error) {
+				setGlobalStatus(t('smartcommands', 'Could not save'))
+			}
+		})
+	}
+
 	document.querySelectorAll('.smartcommands-manifest__delete').forEach((button) => {
 		button.addEventListener('click', async () => {
 			const owner = button.dataset.owner ?? ''
