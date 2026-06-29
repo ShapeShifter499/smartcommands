@@ -101,7 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	document.querySelectorAll('.smartcommands-manifest__delete').forEach((button) => {
-		button.addEventListener('click', async () => {
+		button.addEventListener('click', async (event) => {
+			// The button lives inside the <summary>; keep its click from
+			// toggling the collapsible panel.
+			event.stopPropagation()
 			const owner = button.dataset.owner ?? ''
 			const id = button.dataset.id ?? ''
 			if (!window.confirm(t('smartcommands', 'Delete the published commands for /{id}?', { id }))) {

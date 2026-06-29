@@ -1,0 +1,53 @@
+/* Collapsible command lists in the admin/personal settings pages. Each bot's
+   (and the global) command list is a native <details> disclosure: the summary
+   is the "Name /id" header with a chevron on the right that flips when open. */
+
+.smartcommands-manifest {
+	margin-block: 8px;
+}
+
+.smartcommands-manifest > summary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 4px;
+	cursor: pointer;
+	list-style: none;
+	border-radius: var(--border-radius);
+}
+
+.smartcommands-manifest > summary:hover,
+.smartcommands-manifest > summary:focus-visible {
+	background: var(--color-background-hover);
+}
+
+/* Hide the default disclosure triangle so the chevron below is the only marker. */
+.smartcommands-manifest > summary::-webkit-details-marker {
+	display: none;
+}
+
+.smartcommands-manifest > summary::after {
+	content: "\25BE"; /* ▾ */
+	margin-inline-start: auto;
+	color: var(--color-text-maxcontrast);
+	transition: transform 0.15s ease;
+}
+
+.smartcommands-manifest[open] > summary::after {
+	transform: rotate(180deg);
+}
+
+/* In the admin view the delete button shares the summary; push it (and the
+   chevron after it) to the right edge. */
+.smartcommands-manifest__delete {
+	margin-inline-start: auto;
+}
+
+.smartcommands-manifest__id,
+.smartcommands-manifest__owner {
+	color: var(--color-text-maxcontrast);
+}
+
+.smartcommands-manifest__owner {
+	font-size: 12px;
+}

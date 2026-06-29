@@ -6,6 +6,7 @@ declare(strict_types=1);
 /** @var \OCP\IL10N $l */
 
 script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
+style(OCA\SmartCommands\AppInfo\Application::APP_ID, 'settings');
 ?>
 <div class="section" id="smartcommands-admin">
 	<h2><?php p($l->t('Bot commands')); ?></h2>
@@ -107,8 +108,8 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 		<p class="settings-hint"><?php p($l->t('No bot has published commands yet.')); ?></p>
 	<?php else: ?>
 		<?php foreach ($_['manifests'] as $manifest): ?>
-			<div class="smartcommands-manifest">
-				<h4 class="smartcommands-manifest__head">
+			<details class="smartcommands-manifest">
+				<summary class="smartcommands-manifest__head">
 					<?php p($manifest['name']); ?>
 					<code class="smartcommands-manifest__id">/<?php p($manifest['id']); ?></code>
 					<?php if ($manifest['owner'] !== ''): ?>
@@ -118,7 +119,7 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 						data-owner="<?php p($manifest['owner']); ?>" data-id="<?php p($manifest['id']); ?>">
 						<?php p($l->t('Delete')); ?>
 					</button>
-				</h4>
+				</summary>
 				<?php if ($manifest['commands'] === []): ?>
 					<p class="settings-hint"><?php p($l->t('No commands.')); ?></p>
 				<?php else: ?>
@@ -132,7 +133,7 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'admin');
 						<?php endforeach; ?>
 					</table>
 				<?php endif; ?>
-			</div>
+			</details>
 		<?php endforeach; ?>
 	<?php endif; ?>
 </div>
