@@ -6,6 +6,7 @@ declare(strict_types=1);
 /** @var \OCP\IL10N $l */
 
 script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
+style(OCA\SmartCommands\AppInfo\Application::APP_ID, 'settings');
 ?>
 <div class="section" id="smartcommands-personal">
 	<h2><?php p($l->t('Bot commands')); ?></h2>
@@ -83,8 +84,8 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 		<p class="settings-hint"><?php p($l->t('No commands are available yet.')); ?></p>
 	<?php else: ?>
 		<?php if ($_['globalCommands'] !== []): ?>
-			<div class="smartcommands-manifest">
-				<h3 class="smartcommands-manifest__head"><?php p($l->t('Global commands')); ?></h3>
+			<details class="smartcommands-manifest">
+				<summary class="smartcommands-manifest__head"><?php p($l->t('Global commands')); ?></summary>
 				<table class="grid">
 					<?php foreach ($_['globalCommands'] as $command): ?>
 						<tr>
@@ -94,14 +95,14 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 						</tr>
 					<?php endforeach; ?>
 				</table>
-			</div>
+			</details>
 		<?php endif; ?>
 		<?php foreach ($_['available'] as $manifest): ?>
-			<div class="smartcommands-manifest">
-				<h3 class="smartcommands-manifest__head">
+			<details class="smartcommands-manifest">
+				<summary class="smartcommands-manifest__head">
 					<?php p($manifest['name']); ?>
 					<code class="smartcommands-manifest__id">/<?php p($manifest['id']); ?></code>
-				</h3>
+				</summary>
 				<?php if ($manifest['commands'] === []): ?>
 					<p class="settings-hint"><?php p($l->t('No commands.')); ?></p>
 				<?php else: ?>
@@ -115,7 +116,7 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 						<?php endforeach; ?>
 					</table>
 				<?php endif; ?>
-			</div>
+			</details>
 		<?php endforeach; ?>
 	<?php endif; ?>
 </div>
