@@ -95,7 +95,12 @@ class TargetRegistry {
 			}
 		}
 
-		return $this->serverDefault();
+		// Validate the server default the same way as the personal/group
+		// choices: if the configured bot no longer has a manifest (e.g. it was
+		// deleted), ignore the stale value and fall through to room-aware
+		// resolution instead of routing the generic alias to a missing bot.
+		$server = $this->serverDefault();
+		return ($server !== '' && in_array($server, $registered, true)) ? $server : '';
 	}
 
 	/**
