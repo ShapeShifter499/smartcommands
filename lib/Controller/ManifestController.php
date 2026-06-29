@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace OCA\SmartCommands\Controller;
 
 use OCA\SmartCommands\AppInfo\Application;
+use OCA\SmartCommands\Service\CommandList;
 use OCA\SmartCommands\Service\ManifestStore;
 use OCA\SmartCommands\Service\RoomBotLookup;
+use OCA\SmartCommands\Service\TargetRegistry;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -19,6 +22,8 @@ class ManifestController extends Controller {
 		private ManifestStore $manifestStore,
 		private IUserSession $userSession,
 		private RoomBotLookup $roomBotLookup,
+		private TargetRegistry $targetRegistry,
+		private IL10N $l10n,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
@@ -56,6 +61,18 @@ class ManifestController extends Controller {
 			$filtered = true;
 		}
 
+		// Global commands are admin-authored and instance-wide: they belong to
+		// no bot, so they are never room-filtered and always lead the list.
+		$globals = $this->targetRegistry->globalCommands();
+		if ($globals !== []) {
+			array_unshift($manifests, [
+				'id' => '',
+				'name' => $this->l10n->t('Global commands'),
+				'owner' => '',
+				'commands' => $globals,
+			]);
+		}
+
 		return new JSONResponse([
 			'bots' => $manifests,
 			'filteredByRoom' => $filtered ? $room : null,
@@ -73,7 +90,7 @@ class ManifestController extends Controller {
 		}
 
 		$botId = trim($botId);
-		if (!$this->isValidId($botId)) {
+		if (!CommandList::isValidId($botId)) {
 			return $this->error('Bot id must contain only letters, numbers, underscores, and hyphens.', Http::STATUS_BAD_REQUEST);
 		}
 
@@ -94,7 +111,7 @@ class ManifestController extends Controller {
 			'name' => $name !== '' ? $name : $botId,
 			'owner' => $userId,
 			'updatedAt' => time(),
-			'commands' => $this->normalizeCommands($commands),
+			'commands' => CommandList::normalize($commands),
 		];
 		if (count($manifest['commands']) === 0) {
 			return $this->error('Manifest must include at least one valid command.', Http::STATUS_BAD_REQUEST);
@@ -115,7 +132,7 @@ class ManifestController extends Controller {
 			return $this->error('Authentication required.', Http::STATUS_UNAUTHORIZED);
 		}
 
-		if (!$this->isValidId($botId)) {
+		if (!CommandList::isValidId($botId)) {
 			return $this->error('Bot id must contain only letters, numbers, underscores, and hyphens.', Http::STATUS_BAD_REQUEST);
 		}
 
@@ -137,34 +154,6 @@ class ManifestController extends Controller {
 
 		usort($manifests, static fn (array $a, array $b): int => strcasecmp((string)$a['name'], (string)$b['name']));
 		return $manifests;
-	}
-
-	private function normalizeCommands(array $commands): array {
-		$normalized = [];
-		foreach ($commands as $command) {
-			if (!is_array($command)) {
-				continue;
-			}
-
-			$id = trim((string)($command['id'] ?? ''));
-			$insert = (string)($command['insert'] ?? '');
-			if (!$this->isValidId($id) || trim($insert) === '') {
-				continue;
-			}
-
-			$normalized[] = [
-				'id' => $id,
-				'label' => substr(trim((string)($command['label'] ?? $id)), 0, 80),
-				'description' => substr(trim((string)($command['description'] ?? '')), 0, 240),
-				'insert' => substr($insert, 0, 1000),
-			];
-		}
-
-		return array_slice($normalized, 0, 100);
-	}
-
-	private function isValidId(string $id): bool {
-		return preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id) === 1;
 	}
 
 	private function error(string $message, int $status): JSONResponse {

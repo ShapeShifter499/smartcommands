@@ -18,6 +18,7 @@ class TargetRegistry {
 	private const GENERIC_TARGET = 'bot';
 	private const DEFAULT_BOT_CONFIG_KEY = 'default_bot_target';
 	private const GROUP_DEFAULTS_CONFIG_KEY = 'group_default_bot_targets';
+	private const GLOBAL_COMMANDS_CONFIG_KEY = 'global_commands';
 
 	public function __construct(
 		private IConfig $config,
@@ -203,6 +204,38 @@ class TargetRegistry {
 
 		usort($manifests, static fn (array $a, array $b): int => strcmp($a['id'], $b['id']));
 		return $manifests;
+	}
+
+	/**
+	 * Admin-authored, instance-wide commands. Unlike a bot manifest these are
+	 * owned by no bot: they are shown to every user in the Smart Picker and are
+	 * never room-filtered. Display-shaped like manifest commands.
+	 *
+	 * @return list<array{id: string, label: string, description: string, insert: string}>
+	 */
+	public function globalCommands(): array {
+		$raw = $this->config->getAppValue(Application::APP_ID, self::GLOBAL_COMMANDS_CONFIG_KEY, '[]');
+		try {
+			$decoded = json_decode($raw, true, 16, JSON_THROW_ON_ERROR);
+		} catch (\JsonException) {
+			return [];
+		}
+
+		return is_array($decoded) ? $this->shapeCommands(['commands' => $decoded]) : [];
+	}
+
+	/**
+	 * Replaces the admin-authored global command list. An empty array clears it.
+	 * Callers are responsible for normalizing first (see CommandList::normalize).
+	 *
+	 * @param list<array{id: string, label: string, description: string, insert: string}> $commands
+	 */
+	public function setGlobalCommands(array $commands): void {
+		$this->config->setAppValue(
+			Application::APP_ID,
+			self::GLOBAL_COMMANDS_CONFIG_KEY,
+			json_encode(array_values($commands), JSON_THROW_ON_ERROR),
+		);
 	}
 
 	/**

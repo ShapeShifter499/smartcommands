@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OCA\SmartCommands\Controller;
 
 use OCA\SmartCommands\AppInfo\Application;
+use OCA\SmartCommands\Service\CommandList;
 use OCA\SmartCommands\Service\TargetRegistry;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -70,6 +71,22 @@ class AdminSettingsController extends Controller {
 		}
 
 		return new JSONResponse(['deleted' => true]);
+	}
+
+	/**
+	 * Replaces the admin-authored global command list. Accepts the same command
+	 * shape as a bot manifest; an empty list clears the global commands.
+	 */
+	public function setGlobalCommands(): JSONResponse {
+		$commands = $this->request->getParams()['commands'] ?? null;
+		if (!is_array($commands)) {
+			return new JSONResponse(['error' => 'commands must be an array.'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$normalized = CommandList::normalize($commands);
+		$this->targetRegistry->setGlobalCommands($normalized);
+
+		return new JSONResponse(['commands' => $normalized]);
 	}
 
 	public function setBridge(string $bridge = '', bool $enabled = true): JSONResponse {
