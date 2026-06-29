@@ -247,26 +247,8 @@ class TargetRegistry {
 	}
 
 	/**
-	 * The calling user's own manifest (botId == userId), for the personal
-	 * editor: its display name and command list. Empty when none is published.
-	 *
-	 * @return array{name: string, commands: list<array{id: string, label: string, description: string, insert: string}>}
-	 */
-	public function ownManifest(string $userId): array {
-		$manifest = $this->manifestStore->get($userId, $userId);
-		if ($manifest === null) {
-			return ['name' => $userId, 'commands' => []];
-		}
-
-		return [
-			'name' => (string)($manifest['name'] ?? $userId),
-			'commands' => $this->shapeCommands($manifest),
-		];
-	}
-
-	/**
 	 * Normalizes a manifest's commands to the {id,label,description,insert}
-	 * shape shared by the admin view and the personal editor.
+	 * shape shared by the admin view and the personal Available-commands view.
 	 *
 	 * @param array<string, mixed> $manifest
 	 * @return list<array{id: string, label: string, description: string, insert: string}>

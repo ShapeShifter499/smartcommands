@@ -28,15 +28,10 @@ class Personal implements ISettings {
 			'default_bot_target',
 			'',
 		);
-		$ownManifest = $userId === '' ? ['name' => '', 'commands' => []] : $this->targetRegistry->ownManifest($userId);
-
 		return new TemplateResponse(Application::APP_ID, 'personal', [
 			'bots' => $this->targetRegistry->registeredBotIds(),
 			'current' => $current,
 			'serverDefault' => $this->targetRegistry->resolveAlias('bot'),
-			'userId' => $userId,
-			'ownName' => $ownManifest['name'],
-			'ownCommands' => $ownManifest['commands'],
 			'globalCommands' => $this->targetRegistry->globalCommands(),
 			'available' => $this->targetRegistry->allManifests(),
 		]);
