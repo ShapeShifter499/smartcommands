@@ -37,6 +37,7 @@ class Personal implements ISettings {
 			'userId' => $userId,
 			'ownName' => $ownManifest['name'],
 			'ownCommands' => $ownManifest['commands'],
+			'globalCommands' => $this->targetRegistry->globalCommands(),
 			'available' => $this->targetRegistry->allManifests(),
 		]);
 	}
