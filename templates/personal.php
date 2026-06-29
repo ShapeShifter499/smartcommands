@@ -73,3 +73,35 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 		</tr>
 	</template>
 </div>
+
+<div class="section" id="smartcommands-available">
+	<h2><?php p($l->t('Available commands')); ?></h2>
+	<p class="settings-hint">
+		<?php p($l->t('Commands published by every bot. These are owned by each bot, so they are shown read-only here. A command only routes when that bot is present in your conversation.')); ?>
+	</p>
+	<?php if ($_['available'] === []): ?>
+		<p class="settings-hint"><?php p($l->t('No bot has published commands yet.')); ?></p>
+	<?php else: ?>
+		<?php foreach ($_['available'] as $manifest): ?>
+			<div class="smartcommands-manifest">
+				<h3 class="smartcommands-manifest__head">
+					<?php p($manifest['name']); ?>
+					<code class="smartcommands-manifest__id">/<?php p($manifest['id']); ?></code>
+				</h3>
+				<?php if ($manifest['commands'] === []): ?>
+					<p class="settings-hint"><?php p($l->t('No commands.')); ?></p>
+				<?php else: ?>
+					<table class="grid">
+						<?php foreach ($manifest['commands'] as $command): ?>
+							<tr>
+								<td><code><?php p($command['insert']); ?></code></td>
+								<td><?php p($command['label']); ?></td>
+								<td class="smartcommands-manifest__desc"><?php p($command['description']); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</table>
+				<?php endif; ?>
+			</div>
+		<?php endforeach; ?>
+	<?php endif; ?>
+</div>
