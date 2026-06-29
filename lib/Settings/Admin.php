@@ -31,6 +31,9 @@ class Admin implements ISettings {
 			'serverDefault' => $this->config->getAppValue(Application::APP_ID, 'default_bot_target', ''),
 			'groups' => $groupIds,
 			'groupDefaults' => $this->targetRegistry->groupDefaults(),
+			'manifests' => $this->targetRegistry->allManifests(),
+			'slashBridge' => $this->config->getAppValue(Application::APP_ID, 'talk_slash_bridge_enabled', '1') === '1',
+			'eventBridge' => $this->config->getAppValue(Application::APP_ID, 'talk_event_bridge_enabled', '1') === '1',
 		]);
 	}
 

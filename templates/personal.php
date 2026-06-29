@@ -30,3 +30,46 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 	</select>
 	<span id="smartcommands-default-bot-status" aria-live="polite"></span>
 </div>
+
+<div class="section" id="smartcommands-personal-editor" data-user-id="<?php p($_['userId']); ?>">
+	<h2><?php p($l->t('Your bot commands')); ?></h2>
+	<p class="settings-hint">
+		<?php p($l->t('Publish the commands your bot offers in the Smart Picker. They are owned by your account and appear as /%s.', [$_['userId']])); ?>
+	</p>
+	<label class="smartcommands-field">
+		<?php p($l->t('Display name')); ?>
+		<input type="text" id="smartcommands-bot-name" value="<?php p($_['ownName']); ?>">
+	</label>
+	<table class="grid">
+		<thead>
+			<tr>
+				<th><?php p($l->t('Insert text')); ?></th>
+				<th><?php p($l->t('Label')); ?></th>
+				<th><?php p($l->t('Description')); ?></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody id="smartcommands-bot-commands">
+			<?php foreach ($_['ownCommands'] as $command): ?>
+				<tr class="smartcommands-cmd-row">
+					<td><input type="text" class="smartcommands-cmd-insert" value="<?php p($command['insert']); ?>"></td>
+					<td><input type="text" class="smartcommands-cmd-label" value="<?php p($command['label']); ?>"></td>
+					<td><input type="text" class="smartcommands-cmd-desc" value="<?php p($command['description']); ?>"></td>
+					<td><button type="button" class="smartcommands-cmd-remove"><?php p($l->t('Remove')); ?></button></td>
+				</tr>
+			<?php endforeach; ?>
+		</tbody>
+	</table>
+	<button type="button" id="smartcommands-cmd-add"><?php p($l->t('Add command')); ?></button>
+	<button type="button" id="smartcommands-bot-save"><?php p($l->t('Save commands')); ?></button>
+	<button type="button" id="smartcommands-bot-delete"><?php p($l->t('Delete all')); ?></button>
+	<span id="smartcommands-bot-status" aria-live="polite"></span>
+	<template id="smartcommands-cmd-template">
+		<tr class="smartcommands-cmd-row">
+			<td><input type="text" class="smartcommands-cmd-insert"></td>
+			<td><input type="text" class="smartcommands-cmd-label"></td>
+			<td><input type="text" class="smartcommands-cmd-desc"></td>
+			<td><button type="button" class="smartcommands-cmd-remove"><?php p($l->t('Remove')); ?></button></td>
+		</tr>
+	</template>
+</div>

@@ -32,4 +32,41 @@ document.addEventListener('DOMContentLoaded', () => {
 			})
 		})
 	})
+
+	document.querySelectorAll('.smartcommands-bridge-toggle').forEach((checkbox) => {
+		checkbox.addEventListener('change', () => {
+			save('/apps/smartcommands/api/admin/bridge', {
+				bridge: checkbox.dataset.bridge,
+				enabled: checkbox.checked,
+			})
+		})
+	})
+
+	document.querySelectorAll('.smartcommands-manifest__delete').forEach((button) => {
+		button.addEventListener('click', async () => {
+			const owner = button.dataset.owner ?? ''
+			const id = button.dataset.id ?? ''
+			if (!window.confirm(t('smartcommands', 'Delete the published commands for /{id}?', { id }))) {
+				return
+			}
+			status.textContent = '…'
+			try {
+				const url = '/apps/smartcommands/api/admin/manifests/'
+					+ encodeURIComponent(owner) + '/' + encodeURIComponent(id)
+				const response = await fetch(OC.generateUrl(url), {
+					method: 'DELETE',
+					headers: { requesttoken: OC.requestToken },
+				})
+				if (response.ok) {
+					button.closest('.smartcommands-manifest')?.remove()
+					status.textContent = t('smartcommands', 'Deleted')
+				} else {
+					status.textContent = t('smartcommands', 'Could not delete')
+				}
+			} catch (error) {
+				status.textContent = t('smartcommands', 'Could not delete')
+			}
+			setTimeout(() => { status.textContent = '' }, 3000)
+		})
+	})
 })

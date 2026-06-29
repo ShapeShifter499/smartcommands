@@ -34,5 +34,15 @@ return [
 			'url' => '/api/admin/group-default',
 			'verb' => 'PUT',
 		],
+		[
+			'name' => 'adminSettings#deleteManifest',
+			'url' => '/api/admin/manifests/{owner}/{botId}',
+			'verb' => 'DELETE',
+		],
+		[
+			'name' => 'adminSettings#setBridge',
+			'url' => '/api/admin/bridge',
+			'verb' => 'PUT',
+		],
 	],
 ];
