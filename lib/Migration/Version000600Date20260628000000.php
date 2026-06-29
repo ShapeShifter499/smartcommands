@@ -87,9 +87,16 @@ class Version000600Date20260628000000 implements IMigrationStep {
 			->where($qb->expr()->eq('appid', $qb->createNamedParameter(Application::APP_ID)))
 			->andWhere($qb->expr()->eq('configkey', $qb->createNamedParameter('default_agent_target')));
 
+		// Buffer the rows and close the cursor before writing: setUserValue/
+		// deleteUserValue write to the same "preferences" table, which raises
+		// "Commands out of sync" on deployments using unbuffered queries if a
+		// result set over that table is still open.
 		$result = $qb->executeQuery();
+		$rows = $result->fetchAll();
+		$result->closeCursor();
+
 		$count = 0;
-		while ($row = $result->fetch()) {
+		foreach ($rows as $row) {
 			$userId = (string)$row['userid'];
 			$value = (string)$row['configvalue'];
 			if ($value !== '' && $this->config->getUserValue($userId, Application::APP_ID, 'default_bot_target', '') === '') {
@@ -98,7 +105,6 @@ class Version000600Date20260628000000 implements IMigrationStep {
 			$this->config->deleteUserValue($userId, Application::APP_ID, 'default_agent_target');
 			$count++;
 		}
-		$result->closeCursor();
 
 		if ($count > 0) {
 			$output->info(sprintf('Migrated %d personal Smart Picker Commands default(s)', $count));
