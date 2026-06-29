@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace OCA\SmartCommands\Controller;
 
 use OCA\SmartCommands\AppInfo\Application;
+use OCA\SmartCommands\Service\ManifestStore;
 use OCA\SmartCommands\Service\RoomBotLookup;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 
 class ManifestController extends Controller {
 	public function __construct(
 		IRequest $request,
-		private IConfig $config,
+		private ManifestStore $manifestStore,
 		private IUserSession $userSession,
 		private RoomBotLookup $roomBotLookup,
 	) {
@@ -100,8 +100,7 @@ class ManifestController extends Controller {
 			return $this->error('Manifest must include at least one valid command.', Http::STATUS_BAD_REQUEST);
 		}
 
-		$key = $this->manifestKey($userId, $botId);
-		$this->config->setAppValue(Application::APP_ID, $key, json_encode($manifest, JSON_THROW_ON_ERROR));
+		$this->manifestStore->save($userId, $botId, $manifest);
 
 		return new JSONResponse(['bot' => $manifest], Http::STATUS_CREATED);
 	}
@@ -125,32 +124,16 @@ class ManifestController extends Controller {
 			return $this->error('Bot id must match the authenticated user id.', Http::STATUS_FORBIDDEN);
 		}
 
-		$this->config->deleteAppValue(Application::APP_ID, $this->manifestKey($userId, $botId));
+		$this->manifestStore->delete($userId, $botId);
 
 		return new JSONResponse(['deleted' => true]);
 	}
 
 	private function registeredManifests(): array {
-		$manifests = [];
-		foreach ($this->config->getAppKeys(Application::APP_ID) as $key) {
-			if (!str_starts_with($key, 'bot:')) {
-				continue;
-			}
-			$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
-			if ($raw === '') {
-				continue;
-			}
-
-			try {
-				$manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
-			} catch (\JsonException) {
-				continue;
-			}
-
-			if (is_array($manifest) && isset($manifest['id'], $manifest['name'], $manifest['commands']) && is_array($manifest['commands'])) {
-				$manifests[] = $manifest;
-			}
-		}
+		$manifests = array_values(array_filter(
+			$this->manifestStore->all(),
+			static fn (array $manifest): bool => isset($manifest['id'], $manifest['name'], $manifest['commands']) && is_array($manifest['commands']),
+		));
 
 		usort($manifests, static fn (array $a, array $b): int => strcasecmp((string)$a['name'], (string)$b['name']));
 		return $manifests;
@@ -182,10 +165,6 @@ class ManifestController extends Controller {
 
 	private function isValidId(string $id): bool {
 		return preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id) === 1;
-	}
-
-	private function manifestKey(string $userId, string $botId): string {
-		return 'bot:' . rawurlencode($userId) . ':' . rawurlencode($botId);
 	}
 
 	private function error(string $message, int $status): JSONResponse {

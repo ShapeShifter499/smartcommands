@@ -23,6 +23,7 @@ class TargetRegistry {
 		private IConfig $config,
 		private IGroupManager $groupManager,
 		private IUserManager $userManager,
+		private ManifestStore $manifestStore,
 	) {
 	}
 
@@ -155,26 +156,12 @@ class TargetRegistry {
 	}
 
 	/**
-	 * @return string[] lowercase bot ids with a registered manifest
+	 * @return string[] lowercase, routing-safe bot ids that have a manifest
 	 */
 	public function registeredBotIds(): array {
 		$ids = [];
-		foreach ($this->config->getAppKeys(Application::APP_ID) as $key) {
-			if (!str_starts_with($key, 'bot:')) {
-				continue;
-			}
-			$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
-			if ($raw === '') {
-				continue;
-			}
-
-			try {
-				$manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
-			} catch (\JsonException) {
-				continue;
-			}
-
-			$id = is_array($manifest) ? strtolower(trim((string)($manifest['id'] ?? ''))) : '';
+		foreach ($this->manifestStore->all() as $manifest) {
+			$id = strtolower(trim((string)($manifest['id'] ?? '')));
 			if ($id !== '' && preg_match('/^[a-z0-9_-]{1,64}$/', $id) === 1) {
 				$ids[] = $id;
 			}
@@ -192,51 +179,20 @@ class TargetRegistry {
 	 */
 	public function allManifests(): array {
 		$manifests = [];
-		foreach ($this->config->getAppKeys(Application::APP_ID) as $key) {
-			if (!str_starts_with($key, 'bot:')) {
-				continue;
-			}
-			$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
-			if ($raw === '') {
-				continue;
-			}
-
-			try {
-				$manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
-			} catch (\JsonException) {
-				continue;
-			}
-			if (!is_array($manifest)) {
-				continue;
-			}
-
-			// Preserve the original case: this id is half of the storage key
-			// (bot:<owner>:<id>) that admin delete reconstructs, so lowercasing
-			// it would break deletion for mixed-case account ids. Bot matching
+		foreach ($this->manifestStore->all() as $manifest) {
+			// Preserve the original-case id: it is half of the storage key
+			// (bot:<owner>:<id>) the admin delete reconstructs, so lowercasing
+			// would break deletion for mixed-case account ids. Matching
 			// elsewhere is already case-insensitive.
 			$id = trim((string)($manifest['id'] ?? ''));
 			if ($id === '') {
 				continue;
 			}
-
-			$commands = [];
-			foreach (is_array($manifest['commands'] ?? null) ? $manifest['commands'] : [] as $command) {
-				if (!is_array($command)) {
-					continue;
-				}
-				$commands[] = [
-					'id' => (string)($command['id'] ?? ''),
-					'label' => (string)($command['label'] ?? ''),
-					'description' => (string)($command['description'] ?? ''),
-					'insert' => (string)($command['insert'] ?? ''),
-				];
-			}
-
 			$manifests[] = [
 				'owner' => (string)($manifest['owner'] ?? ''),
 				'id' => $id,
 				'name' => (string)($manifest['name'] ?? $id),
-				'commands' => $commands,
+				'commands' => $this->shapeCommands($manifest),
 			];
 		}
 
@@ -246,16 +202,10 @@ class TargetRegistry {
 
 	/**
 	 * Deletes a published manifest by owner account and bot id (admin
-	 * housekeeping for stale or decommissioned bots). Returns false when no
-	 * such manifest exists. Mirrors ManifestController::manifestKey().
+	 * housekeeping for stale or decommissioned bots). False when none exists.
 	 */
 	public function deleteManifest(string $owner, string $botId): bool {
-		$key = 'bot:' . rawurlencode($owner) . ':' . rawurlencode($botId);
-		if ($this->config->getAppValue(Application::APP_ID, $key, '') === '') {
-			return false;
-		}
-		$this->config->deleteAppValue(Application::APP_ID, $key);
-		return true;
+		return $this->manifestStore->delete($owner, $botId);
 	}
 
 	/**
@@ -265,22 +215,25 @@ class TargetRegistry {
 	 * @return array{name: string, commands: list<array{id: string, label: string, description: string, insert: string}>}
 	 */
 	public function ownManifest(string $userId): array {
-		$empty = ['name' => $userId, 'commands' => []];
-		$key = 'bot:' . rawurlencode($userId) . ':' . rawurlencode($userId);
-		$raw = $this->config->getAppValue(Application::APP_ID, $key, '');
-		if ($raw === '') {
-			return $empty;
+		$manifest = $this->manifestStore->get($userId, $userId);
+		if ($manifest === null) {
+			return ['name' => $userId, 'commands' => []];
 		}
 
-		try {
-			$manifest = json_decode($raw, true, 64, JSON_THROW_ON_ERROR);
-		} catch (\JsonException) {
-			return $empty;
-		}
-		if (!is_array($manifest)) {
-			return $empty;
-		}
+		return [
+			'name' => (string)($manifest['name'] ?? $userId),
+			'commands' => $this->shapeCommands($manifest),
+		];
+	}
 
+	/**
+	 * Normalizes a manifest's commands to the {id,label,description,insert}
+	 * shape shared by the admin view and the personal editor.
+	 *
+	 * @param array<string, mixed> $manifest
+	 * @return list<array{id: string, label: string, description: string, insert: string}>
+	 */
+	private function shapeCommands(array $manifest): array {
 		$commands = [];
 		foreach (is_array($manifest['commands'] ?? null) ? $manifest['commands'] : [] as $command) {
 			if (!is_array($command)) {
@@ -294,10 +247,7 @@ class TargetRegistry {
 			];
 		}
 
-		return [
-			'name' => (string)($manifest['name'] ?? $userId),
-			'commands' => $commands,
-		];
+		return $commands;
 	}
 
 	/**
