@@ -77,11 +77,25 @@ script(OCA\SmartCommands\AppInfo\Application::APP_ID, 'personal');
 <div class="section" id="smartcommands-available">
 	<h2><?php p($l->t('Available commands')); ?></h2>
 	<p class="settings-hint">
-		<?php p($l->t('Commands published by every bot. These are owned by each bot, so they are shown read-only here. A command only routes when that bot is present in your conversation.')); ?>
+		<?php p($l->t('Everything you can use in the Smart Picker: instance-wide global commands plus what each bot has published. These are shown read-only here; a bot command only routes when that bot is present in your conversation.')); ?>
 	</p>
-	<?php if ($_['available'] === []): ?>
-		<p class="settings-hint"><?php p($l->t('No bot has published commands yet.')); ?></p>
+	<?php if ($_['globalCommands'] === [] && $_['available'] === []): ?>
+		<p class="settings-hint"><?php p($l->t('No commands are available yet.')); ?></p>
 	<?php else: ?>
+		<?php if ($_['globalCommands'] !== []): ?>
+			<div class="smartcommands-manifest">
+				<h3 class="smartcommands-manifest__head"><?php p($l->t('Global commands')); ?></h3>
+				<table class="grid">
+					<?php foreach ($_['globalCommands'] as $command): ?>
+						<tr>
+							<td><code><?php p($command['insert']); ?></code></td>
+							<td><?php p($command['label']); ?></td>
+							<td class="smartcommands-manifest__desc"><?php p($command['description']); ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</table>
+			</div>
+		<?php endif; ?>
 		<?php foreach ($_['available'] as $manifest): ?>
 			<div class="smartcommands-manifest">
 				<h3 class="smartcommands-manifest__head">
