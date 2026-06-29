@@ -33,6 +33,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	})
 
+	document.querySelectorAll('.smartcommands-bridge-toggle').forEach((checkbox) => {
+		checkbox.addEventListener('change', () => {
+			save('/apps/smartcommands/api/admin/bridge', {
+				bridge: checkbox.dataset.bridge,
+				enabled: checkbox.checked,
+			})
+		})
+	})
+
 	document.querySelectorAll('.smartcommands-manifest__delete').forEach((button) => {
 		button.addEventListener('click', async () => {
 			const owner = button.dataset.owner ?? ''
