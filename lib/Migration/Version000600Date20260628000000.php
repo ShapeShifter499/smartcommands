@@ -32,8 +32,12 @@ class Version000600Date20260628000000 implements IMigrationStep {
 	) {
 	}
 
-	public function getName(): string {
+	public function name(): string {
 		return 'Rename agent vocabulary to bot in stored data';
+	}
+
+	public function description(): string {
+		return 'Renames the stored default_bot_target / group-default app values, per-user defaults, and the "bot:" manifest keys from their previous "agent" names, so existing configuration survives the upgrade.';
 	}
 
 	public function preSchemaChange(IOutput $output, Closure $schemaClosure, array $options): void {
