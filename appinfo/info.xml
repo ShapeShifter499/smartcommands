@@ -9,7 +9,7 @@ Smart Picker Commands lets bots, agents, and integrations publish their own comm
 
 Each publisher owns its command manifest, so the picker becomes a shared, room-aware command-discovery layer with no hard-coded local commands.
     ]]></description>
-    <version>0.7.4</version>
+    <version>0.7.5</version>
     <licence>agpl</licence>
     <author mail="">Lance</author>
     <namespace>SmartCommands</namespace>

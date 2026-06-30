@@ -168,9 +168,15 @@ class TargetRegistry {
 		$ids = [];
 		foreach ($this->manifestStore->all() as $manifest) {
 			$id = strtolower(trim((string)($manifest['id'] ?? '')));
-			if ($id !== '' && preg_match('/^[a-z0-9_-]{1,64}$/', $id) === 1) {
-				$ids[] = $id;
+			if ($id === '' || preg_match('/^[a-z0-9_-]{1,64}$/', $id) !== 1) {
+				continue;
 			}
+			// Skip manifests whose publishing account has been deleted: an
+			// orphaned bot must not remain a routing target or picker entry.
+			if (!$this->manifestOwnerExists($manifest)) {
+				continue;
+			}
+			$ids[] = $id;
 		}
 
 		sort($ids);
@@ -181,7 +187,7 @@ class TargetRegistry {
 	 * All registered manifests with their commands, for read-only display in
 	 * the admin settings. Sorted by bot id.
 	 *
-	 * @return list<array{owner: string, id: string, name: string, commands: list<array{id: string, label: string, description: string, insert: string}>}>
+	 * @return list<array{owner: string, id: string, name: string, stale: bool, commands: list<array{id: string, label: string, description: string, insert: string}>}>
 	 */
 	public function allManifests(): array {
 		$manifests = [];
@@ -198,12 +204,36 @@ class TargetRegistry {
 				'owner' => (string)($manifest['owner'] ?? ''),
 				'id' => $id,
 				'name' => (string)($manifest['name'] ?? $id),
+				// Flag manifests whose publishing account no longer exists so the
+				// admin view can surface them for cleanup. These are already
+				// excluded from routing and the picker (see registeredBotIds and
+				// ManifestController::registeredManifests).
+				'stale' => !$this->manifestOwnerExists($manifest),
 				'commands' => $this->shapeCommands($manifest),
 			];
 		}
 
 		usort($manifests, static fn (array $a, array $b): int => strcmp($a['id'], $b['id']));
 		return $manifests;
+	}
+
+	/**
+	 * Whether the account that published a manifest still exists. A deleted
+	 * account leaves its manifest behind as an orphaned config row; treating it
+	 * as non-existent keeps those commands out of routing and the picker, and
+	 * lets the admin view flag them for one-click cleanup. A merely *disabled*
+	 * account still exists, so its commands are deliberately preserved.
+	 *
+	 * @param array<string, mixed> $manifest
+	 */
+	public function manifestOwnerExists(array $manifest): bool {
+		// owner == botId == account id by construction; fall back to the id for
+		// legacy manifests written before the owner field existed.
+		$owner = trim((string)($manifest['owner'] ?? ''));
+		if ($owner === '') {
+			$owner = trim((string)($manifest['id'] ?? ''));
+		}
+		return $owner !== '' && $this->userManager->userExists($owner);
 	}
 
 	/**

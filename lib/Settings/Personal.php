@@ -33,7 +33,14 @@ class Personal implements ISettings {
 			'current' => $current,
 			'serverDefault' => $this->targetRegistry->resolveAlias('bot'),
 			'globalCommands' => $this->targetRegistry->globalCommands(),
-			'available' => $this->targetRegistry->allManifests(),
+			// Hide orphaned manifests (publishing account deleted) from the
+			// user-facing "Available commands" list: they no longer route, so
+			// presenting them as available would be misleading. The admin view
+			// still shows them flagged as stale for cleanup.
+			'available' => array_values(array_filter(
+				$this->targetRegistry->allManifests(),
+				static fn (array $manifest): bool => empty($manifest['stale']),
+			)),
 		]);
 	}
 

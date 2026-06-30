@@ -102,18 +102,21 @@ style(OCA\SmartCommands\AppInfo\Application::APP_ID, 'settings');
 
 	<h3><?php p($l->t('Registered commands')); ?></h3>
 	<p class="settings-hint">
-		<?php p($l->t('Commands each bot has published to the Smart Picker. Each bot owns its own commands, so you cannot edit them here, but you can delete a whole manifest to clear out a decommissioned bot.')); ?>
+		<?php p($l->t('Commands each bot has published to the Smart Picker. Each bot owns its own commands, so you cannot edit them here, but you can delete a whole manifest to clear out a decommissioned bot. A manifest whose account no longer exists is flagged as stale and is already hidden from the picker and routing.')); ?>
 	</p>
 	<?php if ($_['manifests'] === []): ?>
 		<p class="settings-hint"><?php p($l->t('No bot has published commands yet.')); ?></p>
 	<?php else: ?>
 		<?php foreach ($_['manifests'] as $manifest): ?>
-			<details class="smartcommands-manifest">
+			<details class="smartcommands-manifest<?php if (!empty($manifest['stale'])) { p(' smartcommands-manifest--stale'); } ?>">
 				<summary class="smartcommands-manifest__head">
 					<?php p($manifest['name']); ?>
 					<code class="smartcommands-manifest__id">/<?php p($manifest['id']); ?></code>
 					<?php if ($manifest['owner'] !== ''): ?>
 						<span class="smartcommands-manifest__owner"><?php p($l->t('owner: %s', [$manifest['owner']])); ?></span>
+					<?php endif; ?>
+					<?php if (!empty($manifest['stale'])): ?>
+						<span class="smartcommands-manifest__stale" title="<?php p($l->t('The publishing account no longer exists. These commands are already hidden from the picker and routing.')); ?>"><?php p($l->t('stale')); ?></span>
 					<?php endif; ?>
 					<button type="button" class="smartcommands-manifest__delete"
 						data-owner="<?php p($manifest['owner']); ?>" data-id="<?php p($manifest['id']); ?>">

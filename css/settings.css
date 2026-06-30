@@ -51,3 +51,17 @@
 .smartcommands-manifest__owner {
 	font-size: 12px;
 }
+
+/* Orphaned manifest: publishing account is gone. Dim the row and badge it so
+   the admin can tell at a glance it is no longer routing. */
+.smartcommands-manifest--stale > summary {
+	opacity: 0.7;
+}
+
+.smartcommands-manifest__stale {
+	font-size: 11px;
+	font-weight: bold;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--color-warning, #c7860a);
+}
