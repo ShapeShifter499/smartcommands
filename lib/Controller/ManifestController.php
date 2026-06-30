@@ -147,15 +147,11 @@ class ManifestController extends Controller {
 	}
 
 	private function registeredManifests(): array {
-		$manifests = array_values(array_filter(
-			$this->manifestStore->all(),
-			fn (array $manifest): bool => isset($manifest['id'], $manifest['name'], $manifest['commands'])
-				&& is_array($manifest['commands'])
-				// Orphaned manifests (publishing account deleted) never route, so
-				// keep them out of the picker as well.
-				&& $this->targetRegistry->manifestOwnerExists($manifest),
-		));
-
+		// Orphaned manifests (publishing account deleted) never route, so the
+		// picker must not offer them either. liveManifests() is the single
+		// source of truth for that exclusion (shared with the personal
+		// Available-commands list); the controller only re-sorts by name.
+		$manifests = $this->targetRegistry->liveManifests();
 		usort($manifests, static fn (array $a, array $b): int => strcasecmp((string)$a['name'], (string)$b['name']));
 		return $manifests;
 	}

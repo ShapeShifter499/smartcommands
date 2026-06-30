@@ -20,6 +20,21 @@ class TargetRegistry {
 	private const GROUP_DEFAULTS_CONFIG_KEY = 'group_default_bot_targets';
 	private const GLOBAL_COMMANDS_CONFIG_KEY = 'global_commands';
 
+	/**
+	 * Per-request memo of "account id => does it still exist". A single request
+	 * checks the same publishing accounts many times (routing rebuilds the bot
+	 * list several times per message; settings pages sweep it three ways), so
+	 * without this each manifest triggers a fresh user-backend lookup every
+	 * pass. The key is only ever a Nextcloud account id, used as an array key
+	 * and passed to the IUserManager API -- it is never interpolated into SQL
+	 * or a shell, so memoizing it adds no injection surface. The map lives only
+	 * for the current request and is never shared across requests or users, so
+	 * a deleted account cannot get "stuck" as existing later.
+	 *
+	 * @var array<string, bool>
+	 */
+	private array $ownerExistsCache = [];
+
 	public function __construct(
 		private IConfig $config,
 		private IGroupManager $groupManager,
@@ -200,8 +215,18 @@ class TargetRegistry {
 			if ($id === '') {
 				continue;
 			}
+			// Reconstruct the owner half of the storage key (bot:<owner>:<id>) so
+			// the admin Delete button targets the right row. Legacy manifests may
+			// omit the owner field; fall back to the id (owner == id == account by
+			// construction) so a stale legacy manifest is actually deletable, not
+			// just flagged -- otherwise the delete request carries an empty owner
+			// and is rejected.
+			$owner = trim((string)($manifest['owner'] ?? ''));
+			if ($owner === '') {
+				$owner = $id;
+			}
 			$manifests[] = [
-				'owner' => (string)($manifest['owner'] ?? ''),
+				'owner' => $owner,
 				'id' => $id,
 				'name' => (string)($manifest['name'] ?? $id),
 				// Flag manifests whose publishing account no longer exists so the
@@ -215,6 +240,25 @@ class TargetRegistry {
 
 		usort($manifests, static fn (array $a, array $b): int => strcmp($a['id'], $b['id']));
 		return $manifests;
+	}
+
+	/**
+	 * Single source of truth for "which published manifests are live", in the
+	 * same display shape as allManifests(). Every user-facing consumer -- the
+	 * Smart Picker endpoint and the personal Available-commands list -- goes
+	 * through here so the orphan-exclusion rule lives in exactly one place and a
+	 * new consumer cannot forget it. Orphaned manifests (publishing account
+	 * deleted) are dropped fail-closed: a row that somehow lacks the stale flag
+	 * is treated as stale and excluded, never leaked. The admin view keeps using
+	 * allManifests(), which retains orphans (flagged) so they can be cleaned up.
+	 *
+	 * @return list<array{owner: string, id: string, name: string, stale: bool, commands: list<array{id: string, label: string, description: string, insert: string}>}>
+	 */
+	public function liveManifests(): array {
+		return array_values(array_filter(
+			$this->allManifests(),
+			static fn (array $manifest): bool => ($manifest['stale'] ?? true) === false,
+		));
 	}
 
 	/**
@@ -233,7 +277,15 @@ class TargetRegistry {
 		if ($owner === '') {
 			$owner = trim((string)($manifest['id'] ?? ''));
 		}
-		return $owner !== '' && $this->userManager->userExists($owner);
+		if ($owner === '') {
+			return false;
+		}
+		// Probe each distinct account at most once per request (see
+		// $ownerExistsCache); array_key_exists keeps a cached false result.
+		if (!array_key_exists($owner, $this->ownerExistsCache)) {
+			$this->ownerExistsCache[$owner] = $this->userManager->userExists($owner);
+		}
+		return $this->ownerExistsCache[$owner];
 	}
 
 	/**
