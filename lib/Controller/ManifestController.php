@@ -149,7 +149,11 @@ class ManifestController extends Controller {
 	private function registeredManifests(): array {
 		$manifests = array_values(array_filter(
 			$this->manifestStore->all(),
-			static fn (array $manifest): bool => isset($manifest['id'], $manifest['name'], $manifest['commands']) && is_array($manifest['commands']),
+			fn (array $manifest): bool => isset($manifest['id'], $manifest['name'], $manifest['commands'])
+				&& is_array($manifest['commands'])
+				// Orphaned manifests (publishing account deleted) never route, so
+				// keep them out of the picker as well.
+				&& $this->targetRegistry->manifestOwnerExists($manifest),
 		));
 
 		usort($manifests, static fn (array $a, array $b): int => strcasecmp((string)$a['name'], (string)$b['name']));
