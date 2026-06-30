@@ -102,7 +102,7 @@ style(OCA\SmartCommands\AppInfo\Application::APP_ID, 'settings');
 
 	<h3><?php p($l->t('Registered commands')); ?></h3>
 	<p class="settings-hint">
-		<?php p($l->t('Commands each bot has published to the Smart Picker. Published by each bot\'s own account, so this view is read-only.')); ?>
+		<?php p($l->t('Commands each bot has published to the Smart Picker. Each bot owns its own commands, so you cannot edit them here, but you can delete a whole manifest to clear out a decommissioned bot.')); ?>
 	</p>
 	<?php if ($_['manifests'] === []): ?>
 		<p class="settings-hint"><?php p($l->t('No bot has published commands yet.')); ?></p>
