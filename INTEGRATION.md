@@ -87,11 +87,22 @@ listeners that did are gone as of 0.8.0). Your bot decides which messages to
 act on:
 
 - handle `/{yourUserId} <args>` (users address you explicitly), and
-- decide your own policy for the generic `/bot <args>` — every bot in the
-  room receives it. The picker shows users which bot their `/bot` resolves to
-  (personal → group → server default → the single bot in the room), so a
-  reasonable policy is: answer `/bot` only if you are that resolved bot, or
-  only when you are the sole bot in the room.
+- for the generic `/bot <args>` — every bot in the room receives it — ask
+  the app who the resolved target is, and answer only if it is you:
+
+  ```
+  GET /apps/smartcommands/api/generic-target?room=ROOM_TOKEN&sender=SENDER_USER_ID
+  → {"generic": {"name": "Ember Nymbrand", "target": "ember", "source": "personal"},
+     "ambiguous": false}
+  ```
+
+  Authenticate as your bot's Nextcloud account (app password). Pass the
+  message's `sender` (the actor id from the webhook) so the sender's personal
+  default wins; the resolution order is personal → group → server default →
+  the single bot in the room. `generic` is `null` with `"ambiguous": true`
+  when several bots are present and nothing is configured — stay quiet then.
+  This is the same resolution the Smart Picker hint shows users, so the
+  behavior matches the promise.
 
 Reply via the normal Talk bot message API.
 

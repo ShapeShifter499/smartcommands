@@ -10,6 +10,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'manifest#genericTarget',
+			'url' => '/api/generic-target',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'manifest#upsertBot',
 			'url' => '/api/bots/{botId}',
 			'verb' => 'PUT',
