@@ -92,6 +92,18 @@ class TargetRegistry {
 	 * nothing is configured; there is deliberately no hard-coded fallback.
 	 */
 	public function configuredDefault(?string $userId = null): string {
+		return $this->configuredDefaultWithSource($userId)[0];
+	}
+
+	/**
+	 * Same resolution as configuredDefault(), but also reports which layer
+	 * supplied the default ('personal', 'group', or 'server') so user-facing
+	 * surfaces can explain the choice. Both values are '' when nothing is
+	 * configured.
+	 *
+	 * @return array{0: string, 1: string} [botId, source]
+	 */
+	public function configuredDefaultWithSource(?string $userId = null): array {
 		$registered = $this->registeredBotIds();
 
 		if ($userId !== null && $userId !== '') {
@@ -102,12 +114,12 @@ class TargetRegistry {
 				'',
 			)));
 			if ($personal !== '' && in_array($personal, $registered, true)) {
-				return $personal;
+				return [$personal, 'personal'];
 			}
 
 			$groupChoice = $this->groupDefaultForUser($userId, $registered);
 			if ($groupChoice !== null) {
-				return $groupChoice;
+				return [$groupChoice, 'group'];
 			}
 		}
 
@@ -116,7 +128,11 @@ class TargetRegistry {
 		// deleted), ignore the stale value and fall through to room-aware
 		// resolution instead of routing the generic alias to a missing bot.
 		$server = $this->serverDefault();
-		return ($server !== '' && in_array($server, $registered, true)) ? $server : '';
+		if ($server !== '' && in_array($server, $registered, true)) {
+			return [$server, 'server'];
+		}
+
+		return ['', ''];
 	}
 
 	/**

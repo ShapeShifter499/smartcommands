@@ -34,13 +34,17 @@ class ManifestController extends Controller {
 	 *
 	 * When a Talk room token is supplied, only bots whose webhook bot is
 	 * enabled in that conversation are returned, so the picker does not offer
-	 * commands that would go nowhere.
+	 * commands that would go nowhere. The response then also resolves the
+	 * generic /bot alias for the requesting user in that room (same logic the
+	 * bridges use for routing), so the picker can show where /bot would go.
 	 */
 	public function commands(string $room = ''): JSONResponse {
 		$manifests = $this->registeredManifests();
 
 		$room = trim($room);
 		$filtered = false;
+		$generic = null;
+		$genericAmbiguous = false;
 		if ($room !== '' && preg_match('/^[A-Za-z0-9]{1,64}$/', $room) === 1) {
 			$bots = $this->roomBotLookup->webhookBotsForRoom($room);
 			$manifests = array_values(array_filter(
@@ -59,6 +63,23 @@ class ManifestController extends Controller {
 				},
 			));
 			$filtered = true;
+
+			$userId = $this->userSession->getUser()?->getUID();
+			[$default, $source] = $this->targetRegistry->configuredDefaultWithSource($userId);
+			[$genericTarget, $genericAmbiguous] = $this->roomBotLookup->resolveRoomBot($room, 'bot', true, $default);
+			if ($genericTarget !== null) {
+				// The configured default only explains the outcome when it is
+				// the bot that actually resolved; otherwise the room's single
+				// bot answered (the default is unset or not in this room).
+				if ($default === '' || !$this->roomBotLookup->botMatchesTarget($genericTarget['name'], $default)) {
+					$source = 'room';
+				}
+				$generic = [
+					'name' => $genericTarget['name'],
+					'target' => $this->roomBotLookup->slashTargetForBot($genericTarget['name']),
+					'source' => $source,
+				];
+			}
 		}
 
 		// Global commands are admin-authored and instance-wide: they belong to
@@ -76,6 +97,8 @@ class ManifestController extends Controller {
 		return new JSONResponse([
 			'bots' => $manifests,
 			'filteredByRoom' => $filtered ? $room : null,
+			'generic' => $generic,
+			'genericAmbiguous' => $genericAmbiguous,
 		]);
 	}
 
