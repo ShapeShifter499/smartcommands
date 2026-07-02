@@ -10,6 +10,8 @@ use OCA\SmartCommands\Service\TargetRegistry;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Http\Client\IClientService;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use OCP\ICertificateManager;
 use OCP\IConfig;
 use OCP\Security\ISecureRandom;
@@ -20,8 +22,21 @@ use Psr\Log\LoggerInterface;
  */
 class TalkSlashCommandBridgeListener implements IEventListener {
 	private const DEDUPE_TTL_SECONDS = 300;
-	private const DEDUPE_CONFIG_KEY = 'talk_slash_bridge_recent';
 	private const PARSE_EVENT_MAX_AGE_SECONDS = 90;
+
+	private ICache $dedupeCache;
+
+	/**
+	 * Message keys already handled within this request. The sent event and
+	 * the sender's parse event fire in the same request, and the poller's
+	 * parse request can race the send request — an in-memory check plus the
+	 * atomic cache add() below covers both, where the previous appconfig
+	 * read-modify-write raced and let one message fan out into several
+	 * webhooks (observed live 2026-07-02).
+	 *
+	 * @var array<string, true>
+	 */
+	private array $handledKeys = [];
 
 	public function __construct(
 		private IClientService $clientService,
@@ -31,7 +46,9 @@ class TalkSlashCommandBridgeListener implements IEventListener {
 		private TargetRegistry $targetRegistry,
 		private RoomBotLookup $roomBotLookup,
 		private LoggerInterface $logger,
+		ICacheFactory $cacheFactory,
 	) {
+		$this->dedupeCache = $cacheFactory->createDistributed(Application::APP_ID . '_slash_dedupe');
 	}
 
 	#[\Override]
@@ -222,32 +239,19 @@ class TalkSlashCommandBridgeListener implements IEventListener {
 	}
 
 	private function shouldSkipRecentDuplicate(string $roomToken, string $actorType, string $actorId, string $rawMessage, string $messageId): bool {
-		$now = time();
 		$keyMaterial = $messageId !== '' ? $messageId : $actorType . "\0" . $actorId . "\0" . $rawMessage;
 		$key = hash('sha256', $roomToken . "\0" . $keyMaterial);
-		$recent = json_decode($this->config->getAppValue(Application::APP_ID, self::DEDUPE_CONFIG_KEY, '{}'), true);
-		if (!is_array($recent)) {
-			$recent = [];
-		}
-
-		foreach ($recent as $recentKey => $timestamp) {
-			if (!is_int($timestamp) && !ctype_digit((string)$timestamp)) {
-				unset($recent[$recentKey]);
-				continue;
-			}
-			if ($now - (int)$timestamp > self::DEDUPE_TTL_SECONDS) {
-				unset($recent[$recentKey]);
-			}
-		}
-
-		if (isset($recent[$key])) {
-			$this->config->setAppValue(Application::APP_ID, self::DEDUPE_CONFIG_KEY, json_encode($recent, JSON_THROW_ON_ERROR));
+		if (isset($this->handledKeys[$key])) {
 			return true;
 		}
-
-		$recent[$key] = $now;
-		$this->config->setAppValue(Application::APP_ID, self::DEDUPE_CONFIG_KEY, json_encode($recent, JSON_THROW_ON_ERROR));
-		return false;
+		$this->handledKeys[$key] = true;
+		// ICache::add() only sets the key when it does not exist yet and
+		// reports which caller won — atomic on the distributed backends
+		// (Redis/Memcached), so two events racing in separate requests
+		// cannot both forward. This replaces an appconfig JSON map whose
+		// read-modify-write cycle raced across requests and cost a DB write
+		// per message.
+		return !$this->dedupeCache->add($key, 1, self::DEDUPE_TTL_SECONDS);
 	}
 
 	private function sendWebhook(string $botName, string $botUrl, string $botSecret, string $body): void {
