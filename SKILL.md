@@ -1,11 +1,11 @@
 ---
 name: smartcommands
-description: Use when integrating an AI agent with the Smart Picker Commands Nextcloud app, publishing Smart Picker command manifests, setting up Talk bot webhooks, or verifying Talk slash-bridge behavior.
+description: Use when integrating an AI agent with the Smart Picker Commands Nextcloud app, publishing Smart Picker command manifests, setting up Talk bot webhooks, or verifying command delivery.
 ---
 
 # Smart Picker Commands Skill
 
-Use this repo as the Nextcloud-side bridge between Talk, Smart Picker command manifests, and bot webhooks.
+Use this repo as the Nextcloud-side discovery layer connecting Talk, Smart Picker command manifests, and bot webhooks. Message delivery itself is Talk's native bot webhook mechanism — this app puts commands in the picker and shows where the generic /bot alias resolves; it does not forward messages (the 0.2.x–0.7.x bridge listeners that did were removed in 0.8.0).
 
 ## Ground Rules
 
@@ -14,7 +14,7 @@ Use this repo as the Nextcloud-side bridge between Talk, Smart Picker command ma
 - Each bot's Nextcloud user account can only publish or delete the manifest whose id matches its authenticated Nextcloud user id.
 - Do not store secrets in manifests, docs, commits, logs, or chat. Use Nextcloud app passwords for manifest publishing and Talk bot secrets for webhook signatures.
 - Do not assume source changes are live. After copying a changed app checkout into Nextcloud, run `php occ upgrade` and restart the Nextcloud container or PHP-FPM process to clear old app/event-listener state.
-- Do not add new command prefixes to docs until the app code actually routes them. Current slash-bridge aliases are `/bot`, `/nymble`, and `/aurel`.
+- Do not document command prefixes a bot does not actually handle. Talk delivers every room message to every enabled webhook bot; each bot filters for its own `/{botId}` prefix and applies its own policy for the generic `/bot` alias.
 
 ## Attach A Bot
 
@@ -99,13 +99,13 @@ Then test from Talk:
 1. Open a room containing the bot's Talk bot.
 2. Open the Smart Picker and select the bot command.
 3. Send the inserted text.
-4. Confirm Nextcloud logs show the Smart Picker Commands slash bridge invoking the webhook with `statusCode: "200"`.
+4. Confirm the bot received Talk's native webhook for the message (one delivery, correct signature) and replied.
 
 Useful log filter:
 
 ```bash
 tail -n 120 /var/www/html/data/nextcloud.log \
-  | grep -i "Smart Picker Commands slash bridge\|invalid signature\|statusCode"
+  | grep -i "bot\|invalid signature\|statusCode"
 ```
 
 ## Optional OpenClaw Poller Fallback

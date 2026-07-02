@@ -35,8 +35,8 @@ class ManifestController extends Controller {
 	 * When a Talk room token is supplied, only bots whose webhook bot is
 	 * enabled in that conversation are returned, so the picker does not offer
 	 * commands that would go nowhere. The response then also resolves the
-	 * generic /bot alias for the requesting user in that room (same logic the
-	 * bridges use for routing), so the picker can show where /bot would go.
+	 * generic /bot alias for the requesting user in that room, so the picker
+	 * can show where /bot would go.
 	 */
 	public function commands(string $room = ''): JSONResponse {
 		$manifests = $this->registeredManifests();
@@ -65,21 +65,7 @@ class ManifestController extends Controller {
 			$filtered = true;
 
 			$userId = $this->userSession->getUser()?->getUID();
-			[$default, $source] = $this->targetRegistry->configuredDefaultWithSource($userId);
-			[$genericTarget, $genericAmbiguous] = $this->roomBotLookup->resolveRoomBot($room, 'bot', true, $default);
-			if ($genericTarget !== null) {
-				// The configured default only explains the outcome when it is
-				// the bot that actually resolved; otherwise the room's single
-				// bot answered (the default is unset or not in this room).
-				if ($default === '' || !$this->roomBotLookup->botMatchesTarget($genericTarget['name'], $default)) {
-					$source = 'room';
-				}
-				$generic = [
-					'name' => $genericTarget['name'],
-					'target' => $this->roomBotLookup->slashTargetForBot($genericTarget['name']),
-					'source' => $source,
-				];
-			}
+			[$generic, $genericAmbiguous] = $this->resolveGeneric($room, $userId);
 		}
 
 		// Global commands are admin-authored and instance-wide: they belong to
@@ -100,6 +86,63 @@ class ManifestController extends Controller {
 			'generic' => $generic,
 			'genericAmbiguous' => $genericAmbiguous,
 		]);
+	}
+
+	/**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * Resolves the generic /bot alias for a sender in a room. Talk delivers
+	 * /bot messages to every webhook bot in the room; this is the shared
+	 * arbiter that lets each bot answer only when it is the resolved target,
+	 * so the picker's "here, /bot goes to X" hint matches what happens. Bots
+	 * call it (authenticated, e.g. app password) when they receive a /bot
+	 * message, passing the message's sender so the sender's personal default
+	 * wins — without `sender` it resolves for the authenticated caller.
+	 */
+	public function genericTarget(string $room = '', string $sender = ''): JSONResponse {
+		$room = trim($room);
+		if ($room === '' || preg_match('/^[A-Za-z0-9]{1,64}$/', $room) !== 1) {
+			return $this->error('A valid room token is required.', Http::STATUS_BAD_REQUEST);
+		}
+
+		$sender = trim($sender);
+		$userId = $sender !== '' ? $sender : $this->userSession->getUser()?->getUID();
+		[$generic, $ambiguous] = $this->resolveGeneric($room, $userId);
+
+		return new JSONResponse([
+			'generic' => $generic,
+			'ambiguous' => $ambiguous,
+		]);
+	}
+
+	/**
+	 * Shared resolution behind the picker hint and the generic-target API:
+	 * the sender's configured default (personal -> group -> server) when that
+	 * bot is in the room, else the room's single bot, else nothing (ambiguous
+	 * when several bots are present).
+	 *
+	 * @return array{0: ?array{name: string, target: string, source: string}, 1: bool}
+	 */
+	private function resolveGeneric(string $room, ?string $userId): array {
+		[$default, $source] = $this->targetRegistry->configuredDefaultWithSource($userId);
+		[$bot, $ambiguous] = $this->roomBotLookup->resolveRoomBot($room, 'bot', true, $default);
+		if ($bot === null) {
+			return [null, $ambiguous];
+		}
+
+		// The configured default only explains the outcome when it is the bot
+		// that actually resolved; otherwise the room's single bot answered
+		// (the default is unset or not in this room).
+		if ($default === '' || !$this->roomBotLookup->botMatchesTarget($bot['name'], $default)) {
+			$source = 'room';
+		}
+
+		return [[
+			'name' => $bot['name'],
+			'target' => $this->roomBotLookup->slashTargetForBot($bot['name']),
+			'source' => $source,
+		], $ambiguous];
 	}
 
 	/**

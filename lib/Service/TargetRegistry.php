@@ -43,31 +43,6 @@ class TargetRegistry {
 	) {
 	}
 
-	/**
-	 * Lowercase target tokens accepted after a leading slash, including the
-	 * generic "bot" alias.
-	 *
-	 * @return string[]
-	 */
-	public function targets(): array {
-		$targets = [self::GENERIC_TARGET];
-		foreach ($this->registeredBotIds() as $botId) {
-			$targets[] = $botId;
-		}
-
-		return array_values(array_unique($targets));
-	}
-
-	/**
-	 * Builds the message-match regex for the current targets: the generic
-	 * alias plus every registered manifest id. The generic alias is always
-	 * included so room-aware resolution can run even with no manifests.
-	 */
-	public function messagePattern(): string {
-		$quoted = array_map(static fn (string $target): string => preg_quote($target, '/'), $this->targets());
-		return '/^\/(?P<target>' . implode('|', $quoted) . ')(?:@[^\s]+)?(?:\s+[\s\S]*)?$/i';
-	}
-
 	public function isGenericTarget(string $target): bool {
 		return strtolower($target) === self::GENERIC_TARGET;
 	}

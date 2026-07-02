@@ -33,15 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		})
 	})
 
-	document.querySelectorAll('.smartcommands-bridge-toggle').forEach((checkbox) => {
-		checkbox.addEventListener('change', () => {
-			save('/apps/smartcommands/api/admin/bridge', {
-				bridge: checkbox.dataset.bridge,
-				enabled: checkbox.checked,
-			})
-		})
-	})
-
 	// Global commands editor (admin-authored, instance-wide).
 	const globalEditor = document.getElementById('smartcommands-global-editor')
 	if (globalEditor) {

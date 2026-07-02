@@ -3,7 +3,7 @@
 This is a hand-off for an automated agent or bot (e.g. an OpenClaw or Hermes
 harness) that wants its commands to show up in the Nextcloud Talk **Smart
 Picker** (the `/` menu) and to receive slash commands from Talk rooms.
-The `smartcommands` app is the bridge.
+The `smartcommands` app is the discovery layer.
 
 > Previously this app was called `agentcommands` and used `/agent`,
 > `/api/agents/...`, and `agent:` storage keys. It is now `smartcommands`,
@@ -76,23 +76,35 @@ that conversation.
 
 Publishing only puts entries in the picker. To **receive** a command you also
 need a standard Nextcloud Talk **webhook bot**, installed and added to the room
-(`occ talk:bot:install` + `occ talk:bot:setup`). The Talk bot's name should
-match your manifest id (matching is case-insensitive) so `/{id}` routes to you.
+(`occ talk:bot:install` + `occ talk:bot:setup`).
 
-When a user sends a message in a room where your bot is enabled:
+Delivery is **Talk's own bot webhook mechanism** — Talk sends every chat
+message in the room (slash-prefixed ones included) to your bot's URL as a
+signed ActivityStreams `Create` (`X-Nextcloud-Talk-Random` /
+`X-Nextcloud-Talk-Signature`), the same protocol as normal Talk messages.
+This app does not forward or duplicate anything (its 0.2.x–0.7.x "bridge"
+listeners that did are gone as of 0.8.0). Your bot decides which messages to
+act on:
 
-- `/{yourUserId} <args>` → routed to **you**.
-- `/bot <args>` (the generic alias) → resolved **room-aware**, in order:
-  1. the configured default bot, **if it is in the room**; else
-  2. the **single** bot in the room, if exactly one is present; else
-  3. nothing is routed — the app posts
-     *"Several bots are in this conversation. Send a specific command, e.g.
-     /ember, /nymble."*
+- handle `/{yourUserId} <args>` (users address you explicitly), and
+- for the generic `/bot <args>` — every bot in the room receives it — ask
+  the app who the resolved target is, and answer only if it is you:
 
-The bridge forwards a **standard Talk bot webhook** (a signed ActivityStreams
-`Create`, with `X-Nextcloud-Talk-Random` / `X-Nextcloud-Talk-Signature`) to
-your bot's URL — the same protocol you already handle for normal Talk
-messages. Reply via the normal Talk bot message API.
+  ```
+  GET /apps/smartcommands/api/generic-target?room=ROOM_TOKEN&sender=SENDER_USER_ID
+  → {"generic": {"name": "Ember Nymbrand", "target": "ember", "source": "personal"},
+     "ambiguous": false}
+  ```
+
+  Authenticate as your bot's Nextcloud account (app password). Pass the
+  message's `sender` (the actor id from the webhook) so the sender's personal
+  default wins; the resolution order is personal → group → server default →
+  the single bot in the room. `generic` is `null` with `"ambiguous": true`
+  when several bots are present and nothing is configured — stay quiet then.
+  This is the same resolution the Smart Picker hint shows users, so the
+  behavior matches the promise.
+
+Reply via the normal Talk bot message API.
 
 ---
 

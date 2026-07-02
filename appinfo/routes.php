@@ -10,6 +10,11 @@ return [
 			'verb' => 'GET',
 		],
 		[
+			'name' => 'manifest#genericTarget',
+			'url' => '/api/generic-target',
+			'verb' => 'GET',
+		],
+		[
 			'name' => 'manifest#upsertBot',
 			'url' => '/api/bots/{botId}',
 			'verb' => 'PUT',
@@ -42,11 +47,6 @@ return [
 		[
 			'name' => 'adminSettings#setGlobalCommands',
 			'url' => '/api/admin/global-commands',
-			'verb' => 'PUT',
-		],
-		[
-			'name' => 'adminSettings#setBridge',
-			'url' => '/api/admin/bridge',
 			'verb' => 'PUT',
 		],
 	],

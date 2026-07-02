@@ -48,25 +48,6 @@ style(OCA\SmartCommands\AppInfo\Application::APP_ID, 'settings');
 	</table>
 	<span id="smartcommands-admin-status" aria-live="polite"></span>
 
-	<h3><?php p($l->t('Bridges')); ?></h3>
-	<p class="settings-hint">
-		<?php p($l->t('Talk can store /command messages without waking the bots\' webhooks. The bridges close that gap by forwarding each command to the matching bot in the room, hooking into Talk at two different points. Keep both enabled unless a bot answers the same command twice (disable one of the two), or commands already reach your bots some other way, such as native Talk routing or an external relay (disable both).')); ?>
-	</p>
-	<label>
-		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="slash" <?php if ($_['slashBridge']) { p('checked'); } ?>>
-		<?php p($l->t('Slash-message bridge')); ?>
-	</label>
-	<p class="settings-hint">
-		<?php p($l->t('Watches messages as Talk stores them. Covers every conversation, no setup needed.')); ?>
-	</p>
-	<label>
-		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="event" <?php if ($_['eventBridge']) { p('checked'); } ?>>
-		<?php p($l->t('Event-bot bridge')); ?>
-	</label>
-	<p class="settings-hint">
-		<?php p($l->t('Reacts when Talk invokes this app\'s own event bot, so it only acts in rooms where that bot is enabled. In those rooms it can double up with the slash-message bridge.')); ?>
-	</p>
-
 	<h3><?php p($l->t('Global commands')); ?></h3>
 	<p class="settings-hint">
 		<?php p($l->t('Instance-wide commands you author here. They belong to no bot, appear in the Smart Picker for every user, and are shown in any conversation.')); ?>

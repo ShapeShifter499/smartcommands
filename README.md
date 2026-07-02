@@ -13,17 +13,13 @@ This is an early scaffold:
 - exposes a local command manifest endpoint at `/apps/smartcommands/api/commands`
 - lets authenticated Nextcloud user accounts publish command manifests
 - inserts Talk-ready command text from explicitly registered bot manifests
-- experimentally bridges Talk messages like `/nymble status` to the matching configured Talk bot webhook
-- can also follow Nextcloud's in-process bot pattern with a `nextcloudapp://smartcommands` event bot, similar to `nextcloud/command_bot`
+- shows in the picker which bot the generic `/bot` alias resolves to in the current conversation
 
 The app does not ship opinionated default commands. The Smart Picker menu stays empty until an authenticated Nextcloud user account for a bot publishes a manifest. This keeps local command surfaces owned by the bots that actually support them.
-The slash bridge handles the Talk behavior where slash-style messages can be stored as normal messages without waking configured bot webhooks: when Talk stores `/<bot> ...` (or the generic `/bot ...`), the app signs and forwards a standard Talk bot webhook payload to the matching bot configured in that conversation.
 
-Valid slash targets are derived from the registered bot manifests — publishing a manifest for a new bot (e.g. `ember`) makes `/ember ...` routable with no app code change. The generic `/bot` alias resolves to the app value `default_bot_target` (default: `nymble`):
+Message delivery itself is Talk's job, not this app's: Talk delivers chat messages — slash-prefixed ones included — to the webhook bots configured in a conversation (verified against spreed v20 through v23; `BotService::afterChatMessageSent` applies no slash filter). Versions 0.2.x–0.7.x of this app carried "bridge" listeners that re-forwarded slash commands to bot webhooks; they were built on a misdiagnosis (receiving bots ignoring slash-prefixed text, later compounded by the app's own duplicate-forwarding bugs, looked exactly like Talk withholding delivery) and only ever produced duplicate webhooks. They were removed in 0.8.0.
 
-```bash
-php occ config:app:set smartcommands default_bot_target --value nymble
-```
+Publishing a manifest for a new bot (e.g. `ember`) makes its commands discoverable in the picker with no app code change. The generic `/bot` alias resolves per user — personal choice, then group default, then the server default (all configurable in settings) — and the picker displays that resolution per room; the bots themselves decide how to handle `/bot` text they receive.
 
 The Smart Picker command list is room-aware: when opened inside a Talk conversation, only bots whose webhook bot is enabled in that conversation are listed. Outside a conversation context the full registry is shown.
 
@@ -32,23 +28,7 @@ Smart Picker Commands expects each bot to be set up with both a dedicated Nextcl
 - the Nextcloud user account, usually named after the bot, owns the Smart Picker command manifest through username/app-password authentication
 - the Talk bot account/record in the relevant room receives signed webhook calls and posts replies
 
-For example, a `nymble` Nextcloud user publishes `/apps/smartcommands/api/bots/nymble`, while the `Nymble` Talk bot receives `/nymble ...` bridge webhooks in rooms where that bot is configured.
-
-### Experimental Talk event bot bridge
-
-Nextcloud's `command_bot` app uses a local Talk event bot instead of the deprecated `talk_commands` table. To try the same path, install Smart Picker Commands as a Talk event bot, set it up in the room, and keep the existing webhook bot such as `Nymble` configured in that same room:
-
-```bash
-SECRET="$(openssl rand -hex 64)"
-php occ talk:bot:install --feature event \
-  "Smart Picker Commands" "$SECRET" "nextcloudapp://smartcommands" \
-  "Bridge /nymble-style Talk messages to configured bot webhooks"
-
-php occ talk:bot:list --output=json_pretty
-php occ talk:bot:setup <bot-commands-bot-id> <room-token>
-```
-
-When the event bot receives a `/<registered-bot> ...` or `/bot ...` message, Smart Picker Commands looks for the matching webhook bot in that room and forwards the normal signed Talk bot payload to that bot's webhook URL.
+For example, a `nymble` Nextcloud user publishes `/apps/smartcommands/api/bots/nymble`, while the `Nymble` Talk bot receives `/nymble ...` messages through Talk's native bot webhook delivery in rooms where that bot is configured.
 
 ### Talk bot administration notes
 
@@ -88,14 +68,14 @@ php occ upgrade
 
 ## Optional OpenClaw Talk Poller Fallback
 
-The normal path for Smart Picker Commands is still Nextcloud Talk events and signed Talk bot webhooks. The files in [`contrib/openclaw`](contrib/openclaw) are an optional OpenClaw-side fallback for rooms where Talk app/event hooks are delayed, stale, or do not reliably fire for command-looking messages.
+The normal path for command delivery is Talk's native bot webhooks. The files in [`contrib/openclaw`](contrib/openclaw) are an optional OpenClaw-side fallback for rooms where webhook delivery is delayed, stale, or unreliable.
 
 The fallback poller:
 
 - reads recent Talk room messages through the Talk chat OCS API without setting the read marker
 - only replays messages from explicitly configured sender ids
 - only replays messages whose text starts with configured command prefixes
-- waits a handoff grace period so the normal Talk event bridge can answer first
+- waits a handoff grace period so Talk's native webhook delivery can answer first
 - skips fallback replay when a bot reply appears before the next user message
 - signs a standard ActivityStreams `Create` payload with the configured Talk bot secret
 - posts that payload to the local OpenClaw Nextcloud Talk webhook
@@ -128,7 +108,7 @@ nextcloud-talk-poller --once --dry-run
 systemctl --user enable --now openclaw-nextcloud-talk-poller.service
 ```
 
-Use this as a safety net, not as a replacement for the Smart Picker Commands app bridge. If the normal bridge starts answering reliably, the handoff grace and bot-reply check should keep the poller from producing duplicate replies.
+Use this as a safety net, not as the primary delivery path. When Talk's native webhook delivery answers reliably, the handoff grace and bot-reply check keep the poller from producing duplicate replies.
 
 ## App Store Prep
 
