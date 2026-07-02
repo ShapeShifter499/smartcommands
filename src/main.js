@@ -67,16 +67,20 @@ class SmartCommandsPicker extends HTMLElement {
 
   renderGenericHint(generic, genericAmbiguous) {
     if (generic) {
+      // Keys mirror TargetRegistry::SOURCE_* — keep in sync. An unknown
+      // source renders the hint without an explanation rather than silently
+      // relabeling it as something plausible-but-wrong.
       const sourceLabels = {
         personal: t('smartcommands', 'your personal choice'),
         group: t('smartcommands', 'your group default'),
         server: t('smartcommands', 'the server default'),
         room: t('smartcommands', 'the only bot in this conversation'),
       }
-      const message = t('smartcommands', 'Here, /bot goes to {name} — {source}.', {
-        name: generic.name || `/${generic.target}`,
-        source: sourceLabels[generic.source] ?? sourceLabels.room,
-      }, { escape: false })
+      const name = generic.name || `/${generic.target}`
+      const source = sourceLabels[generic.source]
+      const message = source
+        ? t('smartcommands', 'Here, /bot goes to {name} — {source}.', { name, source }, { escape: false })
+        : t('smartcommands', 'Here, /bot goes to {name}.', { name }, { escape: false })
       return `<div class="smartcommands-picker__hint">${escapeHtml(message)}</div>`
     }
     if (genericAmbiguous) {

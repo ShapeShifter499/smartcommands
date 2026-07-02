@@ -15,6 +15,16 @@ use OCP\IUserManager;
  * publishing a manifest (no app code change).
  */
 class TargetRegistry {
+	/**
+	 * The layer that supplied a generic-alias resolution. Single source of
+	 * truth for the `source` strings crossing the API to the picker frontend
+	 * (src/main.js mirrors these keys in its label map — keep in sync).
+	 */
+	public const SOURCE_PERSONAL = 'personal';
+	public const SOURCE_GROUP = 'group';
+	public const SOURCE_SERVER = 'server';
+	public const SOURCE_ROOM = 'room';
+
 	private const GENERIC_TARGET = 'bot';
 	private const DEFAULT_BOT_CONFIG_KEY = 'default_bot_target';
 	private const GROUP_DEFAULTS_CONFIG_KEY = 'group_default_bot_targets';
@@ -89,12 +99,12 @@ class TargetRegistry {
 				'',
 			)));
 			if ($personal !== '' && in_array($personal, $registered, true)) {
-				return [$personal, 'personal'];
+				return [$personal, self::SOURCE_PERSONAL];
 			}
 
 			$groupChoice = $this->groupDefaultForUser($userId, $registered);
 			if ($groupChoice !== null) {
-				return [$groupChoice, 'group'];
+				return [$groupChoice, self::SOURCE_GROUP];
 			}
 		}
 
@@ -104,7 +114,7 @@ class TargetRegistry {
 		// resolution instead of routing the generic alias to a missing bot.
 		$server = $this->serverDefault();
 		if ($server !== '' && in_array($server, $registered, true)) {
-			return [$server, 'server'];
+			return [$server, self::SOURCE_SERVER];
 		}
 
 		return ['', ''];

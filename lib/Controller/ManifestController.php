@@ -41,11 +41,15 @@ class ManifestController extends Controller {
 	public function commands(string $room = ''): JSONResponse {
 		$manifests = $this->registeredManifests();
 
-		$room = trim($room);
+		$room = $this->normalizedRoomToken($room);
+		$userId = $this->userSession->getUser()?->getUID();
 		$filtered = false;
 		$generic = null;
 		$genericAmbiguous = false;
-		if ($room !== '' && preg_match('/^[A-Za-z0-9]{1,64}$/', $room) === 1) {
+		// Non-participants get the unscoped list, exactly as if no room had
+		// been supplied: room-scoped data (which bots are in the room, where
+		// /bot resolves) must not leak on a merely known or guessed token.
+		if ($room !== null && $this->isRoomParticipant($room, $userId)) {
 			$bots = $this->roomBotLookup->webhookBotsForRoom($room);
 			$manifests = array_values(array_filter(
 				$manifests,
@@ -64,7 +68,6 @@ class ManifestController extends Controller {
 			));
 			$filtered = true;
 
-			$userId = $this->userSession->getUser()?->getUID();
 			[$generic, $genericAmbiguous] = $this->resolveGeneric($room, $userId);
 		}
 
@@ -99,21 +102,65 @@ class ManifestController extends Controller {
 	 * call it (authenticated, e.g. app password) when they receive a /bot
 	 * message, passing the message's sender so the sender's personal default
 	 * wins — without `sender` it resolves for the authenticated caller.
+	 *
+	 * Room-scoped data stays in the room: the caller must be a participant of
+	 * the room (for a bot that means its Nextcloud user account, not just its
+	 * Talk bot record), and a sender other than the caller must be one too.
 	 */
 	public function genericTarget(string $room = '', string $sender = ''): JSONResponse {
-		$room = trim($room);
-		if ($room === '' || preg_match('/^[A-Za-z0-9]{1,64}$/', $room) !== 1) {
+		$room = $this->normalizedRoomToken($room);
+		if ($room === null) {
 			return $this->error('A valid room token is required.', Http::STATUS_BAD_REQUEST);
 		}
 
+		$callerId = $this->userSession->getUser()?->getUID();
+		if (!$this->isRoomParticipant($room, $callerId)) {
+			return $this->error('Only participants of the room can query it.', Http::STATUS_FORBIDDEN);
+		}
+
 		$sender = trim($sender);
-		$userId = $sender !== '' ? $sender : $this->userSession->getUser()?->getUID();
-		[$generic, $ambiguous] = $this->resolveGeneric($room, $userId);
+		$userId = $sender !== '' ? $sender : $callerId;
+		if ($userId !== $callerId && !$this->isRoomParticipant($room, $userId)) {
+			return $this->error('sender must be a participant of the room.', Http::STATUS_FORBIDDEN);
+		}
+
+		[$generic, $genericAmbiguous] = $this->resolveGeneric($room, $userId);
 
 		return new JSONResponse([
 			'generic' => $generic,
-			'ambiguous' => $ambiguous,
+			'genericAmbiguous' => $genericAmbiguous,
 		]);
+	}
+
+	/**
+	 * Normalizes and validates a Talk room token; null when it is not a
+	 * plausible token. Shared by every endpoint that takes a room parameter
+	 * so the accepted format cannot drift between them.
+	 */
+	private function normalizedRoomToken(string $room): ?string {
+		$room = trim($room);
+		return preg_match('/^[A-Za-z0-9]{1,64}$/', $room) === 1 ? $room : null;
+	}
+
+	/**
+	 * Whether the user participates in the Talk room. Fails closed: no user,
+	 * no Talk app, or no membership all mean "no access" — room-scoped bot
+	 * and resolution data must not leak to non-participants who merely know
+	 * (or guess) a room token.
+	 */
+	private function isRoomParticipant(string $room, ?string $userId): bool {
+		if ($userId === null || $userId === '') {
+			return false;
+		}
+		if (!class_exists(\OCA\Talk\Manager::class)) {
+			return false;
+		}
+		try {
+			\OCP\Server::get(\OCA\Talk\Manager::class)->getRoomForUserByToken($room, $userId);
+			return true;
+		} catch (\Throwable) {
+			return false;
+		}
 	}
 
 	/**
@@ -135,7 +182,7 @@ class ManifestController extends Controller {
 		// that actually resolved; otherwise the room's single bot answered
 		// (the default is unset or not in this room).
 		if ($default === '' || !$this->roomBotLookup->botMatchesTarget($bot['name'], $default)) {
-			$source = 'room';
+			$source = TargetRegistry::SOURCE_ROOM;
 		}
 
 		return [[
