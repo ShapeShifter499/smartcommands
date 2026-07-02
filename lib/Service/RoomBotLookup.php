@@ -115,9 +115,15 @@ class RoomBotLookup {
 	}
 
 	public function botMatchesTarget(string $botName, string $resolvedTarget): bool {
-		$normalized = strtolower(trim($botName));
-		$firstWord = strtok($normalized, " \t\r\n") ?: '';
+		return $this->slashTargetForBot($botName) === $resolvedTarget
+			|| strtolower(trim($botName)) === $resolvedTarget;
+	}
 
-		return $normalized === $resolvedTarget || $firstWord === $resolvedTarget;
+	/**
+	 * The slash target a user would type to address a bot explicitly: the
+	 * first word of its name, lowercased ("Nymble Bot" -> "nymble").
+	 */
+	public function slashTargetForBot(string $botName): string {
+		return strtok(strtolower(trim($botName)), " \t\r\n") ?: '';
 	}
 }

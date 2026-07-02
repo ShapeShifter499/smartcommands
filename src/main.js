@@ -19,7 +19,12 @@ class SmartCommandsPicker extends HTMLElement {
       const room = currentTalkRoomToken()
       const url = generateUrl('/apps/smartcommands/api/commands')
       const response = await axios.get(url, { params: room ? { room } : {} })
-      this.renderCommands(response.data.bots ?? [], response.data.filteredByRoom ?? null)
+      this.renderCommands(
+        response.data.bots ?? [],
+        response.data.filteredByRoom ?? null,
+        response.data.generic ?? null,
+        response.data.genericAmbiguous ?? false,
+      )
     } catch (error) {
       this.renderError(error)
     }
@@ -33,7 +38,7 @@ class SmartCommandsPicker extends HTMLElement {
     this.innerHTML = `<div class="smartcommands-picker smartcommands-picker--error">${escapeHtml(t('smartcommands', 'Commands could not be loaded.'))}</div>`
   }
 
-  renderCommands(bots, filteredByRoom) {
+  renderCommands(bots, filteredByRoom, generic, genericAmbiguous) {
     if (bots.length === 0) {
       const message = filteredByRoom
         ? t('smartcommands', 'No bots are enabled in this conversation.')
@@ -42,6 +47,7 @@ class SmartCommandsPicker extends HTMLElement {
       return
     }
 
+    const hint = this.renderGenericHint(generic, genericAmbiguous)
     const body = bots.flatMap((bot) => {
       const commands = bot.commands ?? []
       return [
@@ -50,13 +56,34 @@ class SmartCommandsPicker extends HTMLElement {
       ]
     }).join('')
 
-    this.innerHTML = `<div class="smartcommands-picker">${body}</div>`
+    this.innerHTML = `<div class="smartcommands-picker">${hint}${body}</div>`
 
     this.querySelectorAll('[data-bot-command]').forEach((button) => {
       button.addEventListener('click', () => {
         this.dispatchCommand(button.dataset.botCommand ?? '')
       })
     })
+  }
+
+  renderGenericHint(generic, genericAmbiguous) {
+    if (generic) {
+      const sourceLabels = {
+        personal: t('smartcommands', 'your personal choice'),
+        group: t('smartcommands', 'your group default'),
+        server: t('smartcommands', 'the server default'),
+        room: t('smartcommands', 'the only bot in this conversation'),
+      }
+      const message = t('smartcommands', 'Here, /bot goes to {name} — {source}.', {
+        name: generic.name || `/${generic.target}`,
+        source: sourceLabels[generic.source] ?? sourceLabels.room,
+      }, { escape: false })
+      return `<div class="smartcommands-picker__hint">${escapeHtml(message)}</div>`
+    }
+    if (genericAmbiguous) {
+      const message = t('smartcommands', 'Several bots are in this conversation and no default is set, so /bot will not answer — use a specific command.')
+      return `<div class="smartcommands-picker__hint">${escapeHtml(message)}</div>`
+    }
+    return ''
   }
 
   renderCommand(command) {
