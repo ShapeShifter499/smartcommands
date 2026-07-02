@@ -44,10 +44,5 @@ return [
 			'url' => '/api/admin/global-commands',
 			'verb' => 'PUT',
 		],
-		[
-			'name' => 'adminSettings#setBridge',
-			'url' => '/api/admin/bridge',
-			'verb' => 'PUT',
-		],
 	],
 ];

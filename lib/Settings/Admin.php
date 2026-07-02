@@ -33,8 +33,6 @@ class Admin implements ISettings {
 			'groupDefaults' => $this->targetRegistry->groupDefaults(),
 			'globalCommands' => $this->targetRegistry->globalCommands(),
 			'manifests' => $this->targetRegistry->allManifests(),
-			'slashBridge' => $this->config->getAppValue(Application::APP_ID, 'talk_slash_bridge_enabled', '1') === '1',
-			'eventBridge' => $this->config->getAppValue(Application::APP_ID, 'talk_event_bridge_enabled', '1') === '1',
 		]);
 	}
 

@@ -7,9 +7,9 @@ namespace OCA\SmartCommands\Service;
 use OCP\IDBConnection;
 
 /**
- * Shared lookup of enabled webhook bots per Talk conversation. Used by both
- * bridge listeners for routing and by the manifest API for room-aware
- * filtering of the Smart Picker command list.
+ * Lookup of enabled webhook bots per Talk conversation, used by the manifest
+ * API for room-aware filtering of the Smart Picker command list and for
+ * resolving where the generic /bot alias would route.
  */
 class RoomBotLookup {
 	private const BOT_STATE_DISABLED = 0;

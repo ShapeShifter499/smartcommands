@@ -88,18 +88,4 @@ class AdminSettingsController extends Controller {
 
 		return new JSONResponse(['commands' => $normalized]);
 	}
-
-	public function setBridge(string $bridge = '', bool $enabled = true): JSONResponse {
-		$keys = [
-			'slash' => 'talk_slash_bridge_enabled',
-			'event' => 'talk_event_bridge_enabled',
-		];
-		if (!isset($keys[$bridge])) {
-			return new JSONResponse(['error' => 'Unknown bridge.'], Http::STATUS_BAD_REQUEST);
-		}
-
-		$this->config->setAppValue(Application::APP_ID, $keys[$bridge], $enabled ? '1' : '0');
-
-		return new JSONResponse(['bridge' => $bridge, 'enabled' => $enabled]);
-	}
 }

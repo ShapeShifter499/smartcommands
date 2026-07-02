@@ -35,8 +35,8 @@ class ManifestController extends Controller {
 	 * When a Talk room token is supplied, only bots whose webhook bot is
 	 * enabled in that conversation are returned, so the picker does not offer
 	 * commands that would go nowhere. The response then also resolves the
-	 * generic /bot alias for the requesting user in that room (same logic the
-	 * bridges use for routing), so the picker can show where /bot would go.
+	 * generic /bot alias for the requesting user in that room, so the picker
+	 * can show where /bot would go.
 	 */
 	public function commands(string $room = ''): JSONResponse {
 		$manifests = $this->registeredManifests();
