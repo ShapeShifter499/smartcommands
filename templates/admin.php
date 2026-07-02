@@ -10,25 +10,11 @@ style(OCA\SmartCommands\AppInfo\Application::APP_ID, 'settings');
 ?>
 <div class="section" id="smartcommands-admin">
 	<h2><?php p($l->t('Bot commands')); ?></h2>
-	<p class="settings-hint">
-		<?php p($l->t('Who handles the generic /bot command. Personal choices win over group defaults, which win over the server default.')); ?>
-	</p>
-
-	<h3><?php p($l->t('Bridges')); ?></h3>
-	<p class="settings-hint">
-		<?php p($l->t('Forward slash-style commands to the matching Talk bot. Disable a bridge if routing is handled elsewhere.')); ?>
-	</p>
-	<label>
-		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="slash" <?php if ($_['slashBridge']) { p('checked'); } ?>>
-		<?php p($l->t('Slash-message bridge')); ?>
-	</label>
-	<br>
-	<label>
-		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="event" <?php if ($_['eventBridge']) { p('checked'); } ?>>
-		<?php p($l->t('Event-bot bridge')); ?>
-	</label>
 
 	<h3><?php p($l->t('Server default')); ?></h3>
+	<p class="settings-hint">
+		<?php p($l->t('Which bot answers the generic /bot command. A user\'s personal choice wins first, then their group default below, then this server default. With no default set anywhere, /bot still works in rooms that have exactly one bot.')); ?>
+	</p>
 	<select class="smartcommands-admin-bot" id="smartcommands-admin-server-default">
 		<option value="" <?php if ($_['serverDefault'] === '') { p('selected'); } ?>>
 			<?php p($l->t('No server default (uses the bot in the room)')); ?>
@@ -61,6 +47,25 @@ style(OCA\SmartCommands\AppInfo\Application::APP_ID, 'settings');
 		<?php endforeach; ?>
 	</table>
 	<span id="smartcommands-admin-status" aria-live="polite"></span>
+
+	<h3><?php p($l->t('Bridges')); ?></h3>
+	<p class="settings-hint">
+		<?php p($l->t('Talk can store /command messages without waking the bots\' webhooks. The bridges close that gap by forwarding each command to the matching bot in the room, hooking into Talk at two different points. Keep both enabled unless a bot answers the same command twice (disable one of the two), or commands already reach your bots some other way, such as native Talk routing or an external relay (disable both).')); ?>
+	</p>
+	<label>
+		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="slash" <?php if ($_['slashBridge']) { p('checked'); } ?>>
+		<?php p($l->t('Slash-message bridge')); ?>
+	</label>
+	<p class="settings-hint">
+		<?php p($l->t('Watches messages as Talk stores them. Covers every conversation, no setup needed.')); ?>
+	</p>
+	<label>
+		<input type="checkbox" class="smartcommands-bridge-toggle" data-bridge="event" <?php if ($_['eventBridge']) { p('checked'); } ?>>
+		<?php p($l->t('Event-bot bridge')); ?>
+	</label>
+	<p class="settings-hint">
+		<?php p($l->t('Reacts when Talk invokes this app\'s own event bot, so it only acts in rooms where that bot is enabled. In those rooms it can double up with the slash-message bridge.')); ?>
+	</p>
 
 	<h3><?php p($l->t('Global commands')); ?></h3>
 	<p class="settings-hint">
