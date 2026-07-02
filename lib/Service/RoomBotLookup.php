@@ -15,6 +15,17 @@ class RoomBotLookup {
 	private const BOT_STATE_DISABLED = 0;
 	private const BOT_FEATURE_WEBHOOK = 1;
 
+	/**
+	 * Per-request memo of the enabled webhook bots per room token. One picker
+	 * request resolves the same room up to three times (manifest filtering
+	 * plus both steps of resolveRoomBot), which without this ran the same
+	 * query each time. Request-scoped only, like TargetRegistry's owner
+	 * cache, so bot changes are picked up by the next request.
+	 *
+	 * @var array<string, list<array{name: string, url: string, secret: string}>>
+	 */
+	private array $roomBotsCache = [];
+
 	public function __construct(
 		private IDBConnection $db,
 	) {
@@ -28,6 +39,10 @@ class RoomBotLookup {
 	 * @return list<array{name: string, url: string, secret: string}>
 	 */
 	public function webhookBotsForRoom(string $roomToken): array {
+		if (isset($this->roomBotsCache[$roomToken])) {
+			return $this->roomBotsCache[$roomToken];
+		}
+
 		$query = $this->db->getQueryBuilder();
 		$query->select('s.name', 's.url', 's.secret', 's.features')
 			->from('talk_bots_server', 's')
@@ -56,7 +71,7 @@ class RoomBotLookup {
 		}
 		$result->closeCursor();
 
-		return $bots;
+		return $this->roomBotsCache[$roomToken] = $bots;
 	}
 
 	/**

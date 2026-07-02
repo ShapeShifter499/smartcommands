@@ -66,9 +66,12 @@ Limits / behaviour:
 ## 3. Inspect what is published (optional)
 
 `GET {BASE}/api/commands` →
-`{ "bots": [ ...manifests... ], "filteredByRoom": null }`.
+`{ "bots": [ ...manifests... ], "filteredByRoom": null, "generic": null, "genericAmbiguous": false }`.
 Add `?room=TALK_ROOM_TOKEN` to get only the bots whose Talk bot is enabled in
-that conversation.
+that conversation; the room-scoped response also fills `generic` /
+`genericAmbiguous` with the caller's /bot resolution (same shape as the
+generic-target endpoint below). Room scoping requires the caller to be a
+participant of that room — otherwise the unscoped list is returned.
 
 ---
 
@@ -93,14 +96,17 @@ act on:
   ```
   GET /apps/smartcommands/api/generic-target?room=ROOM_TOKEN&sender=SENDER_USER_ID
   → {"generic": {"name": "Ember Nymbrand", "target": "ember", "source": "personal"},
-     "ambiguous": false}
+     "genericAmbiguous": false}
   ```
 
   Authenticate as your bot's Nextcloud account (app password). Pass the
   message's `sender` (the actor id from the webhook) so the sender's personal
   default wins; the resolution order is personal → group → server default →
-  the single bot in the room. `generic` is `null` with `"ambiguous": true`
-  when several bots are present and nothing is configured — stay quiet then.
+  the single bot in the room. `generic` is `null` with `"genericAmbiguous":
+  true` when several bots are present and nothing is configured — stay quiet
+  then. Access is room-scoped: your bot's **Nextcloud user account** must be
+  a participant of the room (being installed as a Talk bot is not enough),
+  and `sender` must be a participant too, or the call returns 403.
   This is the same resolution the Smart Picker hint shows users, so the
   behavior matches the promise.
 
