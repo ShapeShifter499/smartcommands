@@ -8,6 +8,7 @@
   "scripts": {
     "build": "vite --mode production build",
     "dev": "vite --mode development build",
+    "test": "php tests/CommandListTest.php",
     "watch": "vite --mode development build --watch"
   },
   "dependencies": {

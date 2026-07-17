@@ -12,7 +12,7 @@ namespace OCA\SmartCommands\Service;
  */
 class CommandList {
 	/** Protective per-manifest cap; Nextcloud Talk itself has no 100-command limit. */
-	public const MAX_COMMANDS = 256;
+	public const MAX_COMMANDS = 128;
 
 	/** A command id (or bot id): letters, numbers, underscore, hyphen, 1-64 chars. */
 	public static function isValidId(string $id): bool {
@@ -45,8 +45,11 @@ class CommandList {
 				'description' => substr(trim((string)($command['description'] ?? '')), 0, 240),
 				'insert' => substr($insert, 0, 1000),
 			];
+			if (count($normalized) >= self::MAX_COMMANDS) {
+				break;
+			}
 		}
 
-		return array_slice($normalized, 0, self::MAX_COMMANDS);
+		return $normalized;
 	}
 }
