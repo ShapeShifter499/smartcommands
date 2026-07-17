@@ -53,7 +53,8 @@ Per-command fields:
 | `description` | no       | one-line help under the label (≤240)                         |
 
 Limits / behaviour:
-- ≤100 commands per manifest.
+- ≤256 commands per manifest. This is a protective app policy; Nextcloud Talk
+  itself does not impose Telegram's 100-command Bot API limit.
 - Commands missing a valid `id` or a non-empty `insert` are dropped silently.
 - If no valid command survives, the call returns **HTTP 400**.
 - `200/201` on success; `403` if `botId` ≠ your authenticated user id.

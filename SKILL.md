@@ -74,6 +74,8 @@ Manifest rules:
 - `label`: short Smart Picker label.
 - `description`: short explanation for the picker.
 - `insert`: exact text inserted into the composer.
+- Each manifest accepts up to 256 commands. This is a protective app cap, not
+  a Nextcloud Talk protocol limit.
 
 Remove a manifest with:
 
